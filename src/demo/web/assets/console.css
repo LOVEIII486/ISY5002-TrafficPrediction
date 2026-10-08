@@ -1,0 +1,180 @@
+/* 浅色。色值取自 dataviz 参考调色板的浅色列，不是把深色值反相——两列的色阶是各自选的。
+   图表底色 #fcfcfb 与卡片底色必须一致，配色是对着它校验的。 */
+:root {
+  --console-surface: #fcfcfb;
+  --console-plane: #f9f9f7;
+  --console-raised: #f2f2ee;
+  --console-border: #e1e0d9;
+  --console-axis: #c3c2b7;
+  --console-ink: #0b0b0b;
+  --console-ink-2: #52514e;
+  --console-muted: #898781;
+  --console-accent: #2a78d6;
+  --console-good: #0ca30c;
+  --console-warn: #fab219;
+  --console-bad: #d03b3b;
+  --console-code: #eceae4;
+  font-family: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+/* 把 Tabler 的面板色压到图表底色上，两边才不会有色差。 */
+[data-bs-theme="light"] {
+  --tblr-bg-surface: var(--console-surface);
+  --tblr-bg-surface-secondary: var(--console-raised);
+  --tblr-body-bg: var(--console-plane);
+  --tblr-body-color: var(--console-ink);
+  --tblr-border-color: var(--console-border);
+  --tblr-border-color-translucent: rgba(11, 11, 11, 0.10);
+  --tblr-secondary: var(--console-muted);
+}
+
+body { margin: 0; min-width: 320px; background: var(--console-plane); }
+.icon { width: 21px; height: 21px; flex-shrink: 0; }
+.small { color: var(--console-muted); font-size: 12px; }
+
+.workspace { display: grid; grid-template-columns: 252px minmax(0, 1fr); min-height: 100vh; }
+.app-sidebar.navbar { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; align-items: stretch; padding: 28px 16px 20px; background: var(--console-surface); border-right: 1px solid var(--console-border); box-shadow: none; }
+.app-brand { display: flex; align-items: center; gap: 12px; padding: 0 8px; text-decoration: none; color: var(--console-ink); font-size: 15px; font-weight: 700; line-height: 1.2; }
+.app-brand small { display: block; margin-top: 6px; font-size: 9px; letter-spacing: .14em; color: var(--console-muted); font-weight: 500; }
+.brand-mark { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; color: #fff; background: var(--console-accent); font-size: 15px; font-weight: 700; flex-shrink: 0; }
+.nav-section { margin: 38px 12px 12px; color: var(--console-muted); font-size: 11px; letter-spacing: .08em; }
+.workspace-nav { display: grid; gap: 6px; }
+.workspace-nav .nav-link { display: flex; gap: 12px; padding: 12px 14px; border-radius: 7px; color: var(--console-muted); font-weight: 500; text-decoration: none; }
+.workspace-nav .nav-link:hover { background: var(--console-raised); color: var(--console-ink); }
+.workspace-nav .nav-link.active { background: rgba(42, 120, 214, .10); color: var(--console-accent); }
+.sidebar-bottom { display: grid; gap: 10px; margin-top: auto; padding: 20px 12px 0; border-top: 1px solid var(--console-border); }
+.sidebar-bottom small, .sidebar-bottom p { color: var(--console-muted); font-size: 11px; margin: 0; line-height: 1.7; }
+
+.workspace-content { min-width: 0; display: flex; flex-direction: column; }
+.app-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 72px; padding: 16px 32px; background: var(--console-surface); border-bottom: 1px solid var(--console-border); }
+.header-breadcrumb { color: var(--console-muted); font-size: 10px; letter-spacing: .1em; }
+.header-breadcrumb span { margin: 0 12px; opacity: .5; }
+.header-actions { display: flex; align-items: center; gap: 14px; }
+[data-menu] { display: none; }
+#main-content { padding: 30px 32px 48px; flex: 1; }
+
+.page-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; }
+.page-heading h1 { margin: 6px 0; font-size: 26px; font-weight: 650; letter-spacing: -.02em; color: var(--console-ink); }
+.page-heading p { margin: 0; color: var(--console-muted); font-size: 13px; }
+.page-pretitle { font-size: 10px; letter-spacing: .08em; color: var(--console-muted); }
+
+.view { display: none; }
+.view.active { display: block; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 22px; }
+.stat-grid .card { display: grid; gap: 8px; align-content: start; padding: 18px 20px; }
+.stat-value { font-size: 27px; font-weight: 650; line-height: 1.2; color: var(--console-ink); }
+.stat-value .unit { font-size: 13px; font-weight: 400; color: var(--console-ink-2); margin-left: 3px; }
+.stat-delta { font-size: 12px; }
+.stat-delta.good { color: var(--console-good); }
+.stat-delta.bad { color: var(--console-bad); }
+.stat-delta.flat { color: var(--console-muted); }
+
+/* 数据来源标注。两个数据域来源不同，不在页面上写明就会被读成同一个。 */
+.source-note { margin: -6px 0 20px; padding: 12px 16px; border-left: 3px solid var(--console-axis); border-radius: 4px; background: var(--console-raised); color: var(--console-muted); font-size: 12px; line-height: 1.9; }
+.source-note b { color: var(--console-ink-2); font-weight: 600; }
+.source-note a { color: var(--console-accent); }
+.domain-note { display: block; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--console-border); color: var(--console-ink-2); }
+.domain-note b { color: var(--console-ink); }
+
+.control-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; margin-bottom: 20px; padding: 16px 20px; border: 1px solid var(--console-border); border-radius: 10px; background: var(--console-surface); }
+.control-bar .field { display: grid; gap: 7px; min-width: 190px; font-size: 12px; font-weight: 500; color: var(--console-ink-2); }
+.control-bar .field-wide { min-width: 300px; }
+.control-bar .field .form-select, .control-bar .field .form-control { font-size: 13px; }
+.control-note { margin-left: auto; align-self: center; color: var(--console-muted); font-size: 12px; }
+.check-group { display: flex; flex-wrap: wrap; gap: 10px 18px; }
+.check-group label { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 400; color: var(--console-ink-2); cursor: pointer; }
+.check-group input { accent-color: var(--console-accent); margin: 0; }
+
+.panel-grid { display: grid; gap: 18px; margin-bottom: 18px; align-items: start; }
+.panel-grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.panel-grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.panel-grid.cols-2-wide { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); }
+
+.card.panel { padding: 20px 22px; min-width: 0; }
+.card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.card-head h4 { margin: 0; font-size: 15px; color: var(--console-ink); }
+
+.chart { width: 100%; }
+/* 画面是 16:9、SVG 的 viewBox 也是 16:9，所以坐标一一对应，不会拉伸。
+   检测框线宽用 non-scaling-stroke 固定成 2px，不随画面尺寸变化。 */
+.camera-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 6px; background: var(--console-code); }
+.camera-frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.camera-frame svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.camera-frame rect { fill: none; stroke-width: 2; vector-effect: non-scaling-stroke; }
+/* 标签描一圈底色，压在亮路面和暗影子上都能看清。 */
+.camera-frame text { paint-order: stroke; stroke: #fcfcfb; stroke-width: 5; stroke-linejoin: round; font-weight: 600; }
+.empty-frame { position: absolute; inset: 0; display: grid; place-items: center; color: var(--console-muted); font-size: 13px; }
+.camera-frame.has-frame .empty-frame { display: none; }
+/* 类名色例：低置信度的框不标文字，靠它辨认。未出现的车型压暗，但不隐藏。 */
+.frame-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0 2px; font-size: 12px; color: var(--console-ink-2); }
+.frame-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.frame-legend span.muted { opacity: 0.35; }
+.frame-legend i { display: block; width: 10px; height: 10px; border-radius: 2px; }
+.chart-map { height: 380px; }
+.chart-tall { height: 430px; }
+.chart-wide { height: 310px; }
+.form-range { margin-bottom: 10px; }
+
+.table-wrap { overflow: auto; max-height: 310px; }
+.table-wrap .table { margin: 0; font-size: 13px; }
+.table-wrap td, .table-wrap th { padding: 8px 10px; }
+.table-wrap td.num { font-variant-numeric: tabular-nums; text-align: right; }
+
+/* 模块状态：状态点是提示，右边那两行文字才是判据。 */
+.service-list { display: grid; }
+.service-row { display: flex; align-items: flex-start; gap: 14px; padding: 15px 0; border-bottom: 1px solid var(--console-border); }
+.service-row:last-child { border-bottom: 0; padding-bottom: 4px; }
+.service-row .status { flex-shrink: 0; margin-top: 1px; }
+.service-detail { display: grid; gap: 3px; font-size: 13px; color: var(--console-ink-2); }
+.service-detail small { color: var(--console-muted); font-size: 11px; }
+
+/* 各点位最后一帧的画面墙 */
+.shot-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.shot { margin: 0; display: grid; gap: 8px; }
+.shot img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 6px; background: var(--console-code); }
+.shot figcaption { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--console-muted); }
+.shot figcaption b { color: var(--console-ink-2); font-weight: 600; }
+
+.status { display: inline-flex; align-items: center; gap: 7px; width: fit-content; max-width: 100%; border: 1px solid var(--console-border); border-radius: 6px; padding: 5px 9px; color: var(--console-muted); background: var(--console-surface); font-size: 11px; }
+.status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--console-muted); flex-shrink: 0; }
+.status[data-state="on"]::before { background: var(--console-good); }
+.status[data-state="warn"]::before { background: var(--console-warn); }
+.status[data-state="err"]::before { background: var(--console-bad); }
+
+.skip-link { position: fixed; left: 12px; top: -60px; z-index: 100; padding: 10px; background: var(--console-surface); }
+.skip-link:focus { top: 12px; }
+.console-toast { position: fixed; bottom: 24px; right: 24px; z-index: 100; max-width: min(420px, calc(100vw - 48px)); padding: 14px 20px; border: 1px solid var(--console-border); border-left: 3px solid var(--console-accent); border-radius: 8px; background: var(--console-surface); color: var(--console-ink-2); font-size: 13px; box-shadow: 0 6px 28px rgba(11, 11, 11, .10); }
+.console-toast.error { border-left-color: var(--console-bad); }
+.console-toast[hidden] { display: none; }
+
+.workspace-footer { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--console-border); padding: 18px 32px; font-size: 10px; color: var(--console-muted); }
+
+/* Tabler 的表格/下拉在深色下默认偏蓝，压成中性色。 */
+.form-select, .form-control { background-color: var(--console-raised); border-color: var(--console-border); color: var(--console-ink); }
+.form-select:focus, .form-control:focus { background-color: var(--console-raised); color: var(--console-ink); border-color: var(--console-accent); }
+.table { --tblr-table-bg: transparent; --tblr-table-color: var(--console-ink-2); --tblr-table-border-color: var(--console-border); }
+
+@media (min-width: 1800px) { #main-content { max-width: 1640px; width: 100%; margin: auto; } }
+@media (max-width: 1400px) { .panel-grid.cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1180px) {
+  .workspace { grid-template-columns: 216px minmax(0, 1fr); }
+  #main-content { padding: 24px; }
+  .app-header { padding: 16px 24px; }
+  .panel-grid.cols-3, .panel-grid.cols-2, .panel-grid.cols-2-wide { grid-template-columns: minmax(0, 1fr); }
+  .shot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+  .workspace { display: block; }
+  .app-sidebar.navbar { display: none; position: fixed; left: 0; top: 64px; bottom: 0; width: 252px; height: calc(100dvh - 64px); z-index: 40; box-shadow: 8px 0 24px rgba(11, 11, 11, .12); }
+  .app-sidebar.is-open { display: flex; }
+  [data-menu] { display: inline-flex; }
+  .app-header { position: sticky; top: 0; z-index: 30; min-height: 64px; padding: 12px 16px; }
+  .header-breadcrumb { display: none; }
+  #main-content { padding: 20px 16px; }
+  .page-heading { align-items: start; flex-direction: column; }
+  .page-heading h1 { font-size: 22px; }
+  .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .card.panel { padding: 16px; }
+  .control-note { margin-left: 0; }
+}

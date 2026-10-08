@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN" data-bs-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>交通监控与预测系统</title>
+    <link rel="stylesheet" href="/assets/vendor/tabler.min.css">
+    <link rel="stylesheet" href="/assets/console.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">跳至主内容</a>
+    <div class="workspace">
+      <aside class="app-sidebar navbar navbar-vertical" id="app-sidebar" aria-label="主导航">
+        <a class="app-brand" href="/#overview">
+          <span class="brand-mark">TC</span>
+          <span>Traffic Control<small>MONITORING &amp; FORECAST</small></span>
+        </a>
+        <div class="nav-section">运行视图</div>
+        <nav class="workspace-nav">
+          <a class="nav-link active" href="/#overview" data-view="overview" aria-current="page">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            <span>总览</span>
+          </a>
+          <a class="nav-link" href="/#monitoring" data-view="monitoring">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 8.5A15 15 0 0 0 22 8.5M2 15.5A15 15 0 0 1 22 15.5"/>
+              <circle cx="12" cy="12" r="2.5"/>
+            </svg>
+            <span>实时监控</span>
+          </a>
+          <a class="nav-link" href="/#forecast" data-view="forecast">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 17l5-6 4 3 5-8 4 5"/><path d="M3 21h18"/>
+            </svg>
+            <span>交通预测</span>
+          </a>
+        </nav>
+        <div class="sidebar-bottom">
+          <span class="status" data-state="on" id="sidebar-status">系统正常</span>
+          <small id="sidebar-endpoint"></small>
+          <p>监测点位 8<br>预测节点 170</p>
+        </div>
+      </aside>
+
+      <div class="workspace-content">
+        <header class="app-header">
+          <button class="btn btn-icon btn-ghost-secondary" type="button" data-menu aria-label="展开导航" aria-controls="app-sidebar" aria-expanded="false">☰</button>
+          <span class="header-breadcrumb">TRAFFIC OPERATIONS <span>/</span> CONSOLE</span>
+          <div class="header-actions">
+            <span class="status" id="dataset-badge" role="status">连接中</span>
+            <button class="btn btn-ghost-secondary" type="button" data-command="refreshActiveView">刷新</button>
+          </div>
+        </header>
+
+        <main id="main-content">
+          <div class="page-heading">
+            <div>
+              <span class="page-pretitle" id="page-pretitle">SYSTEM OVERVIEW</span>
+              <h1 id="page-title">总览</h1>
+              <p id="page-subtitle">路网监测与交通预测的整体运行状况。</p>
+            </div>
+            <button class="btn btn-outline-secondary" type="button" data-command="exportView">导出当前数据</button>
+          </div>
+
+          <section class="view active" id="view-overview">
+            <div class="stat-grid" id="overview-stats"></div>
+            <p class="source-note" id="overview-sources"></p>
+            <div class="panel-grid cols-2-wide">
+              <section class="card panel">
+                <div class="card-head"><h4>监测点位</h4><span class="small" id="overview-map-note">—</span></div>
+                <div class="chart chart-tall" id="chart-overview-map"></div>
+              </section>
+              <section class="card panel">
+                <div class="card-head"><h4>模块状态</h4><span class="small">采集区间 2026-09-13 → 09-20</span></div>
+                <div class="service-list" id="service-list"></div>
+              </section>
+            </div>
+            <section class="card panel">
+              <div class="card-head">
+                <h4>各点位日内节律</h4>
+                <span class="small">当地时间 · 夜间低谷含检测失效（02–04 时近半帧无检出），不等于无车</span>
+              </div>
+              <div class="chart chart-wide" id="chart-overview-rhythm"></div>
+            </section>
+            <section class="card panel">
+              <div class="card-head"><h4>各点位最近检出</h4><span class="small" id="latest-note">—</span></div>
+              <div class="shot-grid" id="shot-grid"></div>
+            </section>
+          </section>
+
+          <section class="view" id="view-monitoring">
+            <div class="stat-grid" id="monitoring-stats"></div>
+            <div class="control-bar">
+              <label class="field">监测点位
+                <select class="form-select" id="camera-select" data-command="reloadMonitoring"></select>
+              </label>
+              <span class="control-note" id="camera-note">—</span>
+            </div>
+            <p class="source-note" id="monitoring-sources"></p>
+            <div class="panel-grid cols-3">
+              <section class="card panel">
+                <div class="card-head"><h4>点位分布</h4><span class="small" id="map-note">—</span></div>
+                <div class="chart chart-map" id="chart-camera-map"></div>
+              </section>
+              <section class="card panel">
+                <div class="card-head"><h4>检测画面</h4><span class="small" id="frame-note">—</span></div>
+                <div class="camera-frame" id="camera-frame">
+                  <img id="frame-image" alt="交通相机画面">
+                  <svg id="frame-overlay" viewBox="0 0 1920 1080" aria-hidden="true"></svg>
+                  <span class="empty-frame" id="frame-empty">尚无检测结果</span>
+                </div>
+                <div class="frame-legend" id="frame-legend"></div>
+                <input class="form-range" type="range" id="frame-range" min="0" max="0" value="0"
+                       aria-label="选择检测画面">
+              </section>
+              <section class="card panel">
+                <div class="card-head"><h4>分车型计数</h4><span class="small" id="series-note">—</span></div>
+                <div class="chart chart-map" id="chart-camera-classes"></div>
+              </section>
+            </div>
+          </section>
+
+          <section class="view" id="view-forecast">
+            <div class="control-bar">
+              <label class="field field-wide">监测点
+                <select class="form-select" id="node-select"></select>
+              </label>
+              <label class="field">观测指标
+                <select class="form-select" id="target-select"></select>
+              </label>
+              <button class="btn btn-primary" type="button" data-command="reloadForecast">应用</button>
+              <span class="control-note" id="forecast-note">—</span>
+            </div>
+            <div class="source-note" id="forecast-sources"></div>
+            <div class="stat-grid" id="forecast-stats"></div>
+            <div class="panel-grid cols-2">
+              <section class="card panel">
+                <div class="card-head">
+                  <h4>路网当前负荷</h4>
+                  <span class="small">由站间里程还原的近似平面布局（非地理坐标）· 颜色越深越繁忙 · 黑圈为选中监测点</span>
+                </div>
+                <div class="chart chart-tall" id="chart-graph"></div>
+              </section>
+              <section class="card panel">
+                <div class="card-head">
+                  <h4 id="curve-title">该监测点的预测</h4>
+                  <span class="small" id="curve-note">—</span>
+                </div>
+                <div class="chart chart-tall" id="chart-curve"></div>
+              </section>
+            </div>
+            <section class="card panel">
+              <div class="card-head">
+                <h4>预测准确度</h4>
+                <span class="small">平均绝对百分比误差 · 越低越好</span>
+              </div>
+              <div class="chart chart-wide" id="chart-accuracy"></div>
+            </section>
+          </section>
+        </main>
+
+        <footer class="workspace-footer">
+          <span>交通监控与预测系统</span>
+          <span>Powered by Tabler</span>
+        </footer>
+      </div>
+    </div>
+    <div class="console-toast" id="toast" hidden></div>
+    <script src="/assets/vendor/plotly.min.js"></script>
+    <script src="/assets/console.js"></script>
+  </body>
+</html>

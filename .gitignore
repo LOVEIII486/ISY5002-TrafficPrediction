@@ -1,0 +1,47 @@
+# Python 缓存与测试产物
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# 虚拟环境与本地配置
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# IDE 与系统文件
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+yolo/
+
+# 目录要存在，但内容不入版本控制，只保留占位文件
+datasets/*
+!datasets/.gitkeep
+
+# results/ 的产物默认不入版本控制，唯独放行 forecast 的实验记录 run.json：
+# 它记了每次运行的指标与生效配置，是别人横向对比时唯一能直接引用的材料（40 个共 60 KB）。
+# git 不能重新包含「父目录已被排除」的文件，所以中间每一级目录都要显式放行。
+results/*
+!results/.gitkeep
+!results/forecast/
+results/forecast/*
+!results/forecast/PEMSD8/
+results/forecast/PEMSD8/*
+!results/forecast/PEMSD8/*/
+results/forecast/PEMSD8/*/*
+!results/forecast/PEMSD8/*/*/
+results/forecast/PEMSD8/*/*/*
+!results/forecast/PEMSD8/*/*/*/
+results/forecast/PEMSD8/*/*/*/*
+!results/forecast/PEMSD8/*/*/*/run.json
+
+notes/
+
+# ultralytics 的默认产物目录
+runs/

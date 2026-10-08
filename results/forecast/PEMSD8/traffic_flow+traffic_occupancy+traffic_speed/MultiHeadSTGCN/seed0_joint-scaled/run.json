@@ -1,0 +1,103 @@
+{
+  "dataset": "PEMSD8",
+  "targets": [
+    "traffic_flow",
+    "traffic_occupancy",
+    "traffic_speed"
+  ],
+  "model": "MultiHeadSTGCN",
+  "source": "ours",
+  "seed": 0,
+  "exp_id": 100370,
+  "interval_minutes": 5,
+  "device": "cuda:0",
+  "train_seconds": 1301.7,
+  "evaluate_seconds": 11.4,
+  "compat": {
+    "libcity_root": "D:\\Users\\Desktop\\ISY5002-TrafficPrediction\\third_party\\LibCity",
+    "exp_id": 100370,
+    "numpy_aliases": [
+      "float",
+      "int"
+    ],
+    "tensorboard": "real",
+    "ray": "shim",
+    "loss_torch_returns": true
+  },
+  "effective": {
+    "scaler": "standard",
+    "input_channels": 3,
+    "time_in_day": false,
+    "day_in_week": false,
+    "learning_rate": 0.001,
+    "batch_size": 64,
+    "max_epoch": 100,
+    "use_early_stop": true,
+    "patience": 30,
+    "clip_grad_norm": true,
+    "pad_with_last_sample": true
+  },
+  "overrides": null,
+  "per_target": {
+    "traffic_flow": {
+      "masked_MAE": {
+        "_avg": 88.3586654663086,
+        "@15min": 88.24508666992188,
+        "@30min": 88.33892822265625,
+        "@60min": 88.5205307006836
+      },
+      "masked_RMSE": {
+        "_avg": 117.34249877929688,
+        "@15min": 117.20864868164062,
+        "@30min": 117.32044219970703,
+        "@60min": 117.56790924072266
+      },
+      "masked_MAPE": {
+        "_avg": 0.9153009057044983,
+        "@15min": 0.9122428297996521,
+        "@30min": 0.9149794578552246,
+        "@60min": 0.919421911239624
+      }
+    },
+    "traffic_occupancy": {
+      "masked_MAE": {
+        "_avg": 0.023446165025234222,
+        "@15min": 0.02617529220879078,
+        "@30min": 0.024474186822772026,
+        "@60min": 0.020336905494332314
+      },
+      "masked_RMSE": {
+        "_avg": 0.036346953362226486,
+        "@15min": 0.037875305861234665,
+        "@30min": 0.03646809980273247,
+        "@60min": 0.033934399485588074
+      },
+      "masked_MAPE": {
+        "_avg": 0.8419173359870911,
+        "@15min": 1.0488548278808594,
+        "@30min": 0.8749732375144958,
+        "@60min": 0.591392457485199
+      }
+    },
+    "traffic_speed": {
+      "masked_MAE": {
+        "_avg": 3.2651567459106445,
+        "@15min": 3.2789461612701416,
+        "@30min": 3.2681691646575928,
+        "@60min": 3.2665390968322754
+      },
+      "masked_RMSE": {
+        "_avg": 6.677530765533447,
+        "@15min": 6.69791316986084,
+        "@30min": 6.677933692932129,
+        "@60min": 6.666702747344971
+      },
+      "masked_MAPE": {
+        "_avg": 0.07663393765687943,
+        "@15min": 0.07700439542531967,
+        "@30min": 0.0766693502664566,
+        "@60min": 0.07646099478006363
+      }
+    }
+  }
+}

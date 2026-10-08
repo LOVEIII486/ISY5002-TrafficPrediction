@@ -1,0 +1,3 @@
+[submodule "third_party/LibCity"]
+	path = third_party/LibCity
+	url = https://github.com/LibCity/Bigscity-LibCity.git

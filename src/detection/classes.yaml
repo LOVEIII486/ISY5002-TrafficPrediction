@@ -1,0 +1,17 @@
+# 模型的类名 -> 本管线统计的车辆类。
+#
+# 管线只认这四类：car / motorcycle / bus / truck。COCO 预训练的权重不需要这个文件
+# （它的类名本来就叫 car、bus、truck、motorcycle，按名字大小写不敏感就能对上）。
+#
+# **在自建数据集上微调过的权重几乎一定要写它。** 否则类名对不上，管线的过滤会
+# 把每一个框都丢掉，产出一个空的 detections.csv 而不报任何错。
+#
+# 左边的类名从权重里读：
+#     python -c "from ultralytics import YOLO; print(YOLO('你的.pt').names)"
+# 右边必须是 car / motorcycle / bus / truck 之一。不属于车辆的类直接不写。
+#
+# 示例（Hangzhou 数据集的 4 类，Van 按 COCO 的做法归入 car）：
+#   Truck: truck
+#   Bus: bus
+#   Car: car
+#   Van: car

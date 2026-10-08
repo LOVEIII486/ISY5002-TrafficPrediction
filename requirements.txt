@@ -1,0 +1,20 @@
+# torch / torchvision 不在本文件内：它们要按 GPU 架构选 CUDA 版本，
+
+ultralytics==8.4.160
+# ultralytics 的 val(save_json=True) 会自己装它，这里钉死版本免得换环境后对不上。
+faster-coco-eval==1.8.0
+opencv-python==5.0.0.93
+pillow==12.3.0
+numpy==2.5.2
+scipy==1.18.1
+pandas==3.0.6
+scikit-learn==1.9.1
+matplotlib==3.11.2
+gradio==6.28.0
+# plotly 只用来提供 src/demo/web/assets/vendor/plotly.min.js，控制台运行时不需要它。
+plotly==7.1.0
+hyperopt==0.3.0
+networkx==3.6.1
+pyyaml==6.0.3
+tqdm==4.70.1
+requests==2.34.2

@@ -1,0 +1,60 @@
+{
+  "dataset": "PEMSD8",
+  "targets": [
+    "traffic_flow"
+  ],
+  "model": "FNN",
+  "source": "libcity",
+  "seed": 0,
+  "exp_id": 100010,
+  "interval_minutes": 5,
+  "device": "cuda:0",
+  "train_seconds": 100.7,
+  "evaluate_seconds": 2.3,
+  "compat": {
+    "libcity_root": "D:\\Users\\Desktop\\ISY5002-TrafficPrediction\\third_party\\LibCity",
+    "exp_id": 100010,
+    "numpy_aliases": [
+      "float",
+      "int"
+    ],
+    "tensorboard": "real",
+    "ray": "shim",
+    "loss_torch_returns": true
+  },
+  "effective": {
+    "scaler": "standard",
+    "input_channels": 1,
+    "time_in_day": false,
+    "day_in_week": false,
+    "learning_rate": 0.01,
+    "batch_size": 64,
+    "max_epoch": 100,
+    "use_early_stop": true,
+    "patience": 30,
+    "clip_grad_norm": true,
+    "pad_with_last_sample": true
+  },
+  "per_target": {
+    "traffic_flow": {
+      "masked_MAE": {
+        "_avg": 21.250797271728516,
+        "@15min": 17.247024536132812,
+        "@30min": 20.609493255615234,
+        "@60min": 28.20977210998535
+      },
+      "masked_RMSE": {
+        "_avg": 32.46755599975586,
+        "@15min": 26.587451934814453,
+        "@30min": 31.915998458862305,
+        "@60min": 42.23575210571289
+      },
+      "masked_MAPE": {
+        "_avg": 0.1331096738576889,
+        "@15min": 0.10633974522352219,
+        "@30min": 0.12801550328731537,
+        "@60min": 0.17992278933525085
+      }
+    }
+  }
+}
