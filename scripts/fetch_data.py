@@ -95,9 +95,10 @@ def fetch_libcity() -> None:
 
 def fetch_weights() -> None:
     sys.path.insert(0, str(ROOT))
+    from src.detection import paths
     from src.detection.run_detect import ensure_weights
 
-    ensure_weights()
+    ensure_weights(paths.WEIGHTS)
 
 
 TARGETS = {"lta": fetch_lta, "libcity": fetch_libcity, "weights": fetch_weights}

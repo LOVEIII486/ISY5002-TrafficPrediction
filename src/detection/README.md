@@ -74,9 +74,38 @@ rm results/detection/detections.csv results/detection/frames.csv results/detecti
 这是有意的：两个模型的结果混进同一份 CSV 后，下游分不出哪一行来自哪个模型。
 `run.json` 里记了权重路径、类映射与推理参数，是这套产物的自证。
 
+## 微调流程
+
+四步，全部在本模块里，产物不入版本控制（`datasets/`、`results/` 都被忽略），按同一种子可重建。
+
+```bash
+python -m src.detection.sample      # 1. 分层抽样并只下载抽中的图：week1 训练 240 张、week2 验证 80 张
+python -m src.detection.prelabel    # 2. yolo26x 以原图分辨率预标注 -> datasets/lta_yolo/（YOLO 格式）
+python -m src.detection.train --imgsz 960 --name m960_pseudo        # 3. 微调 yolo26m
+python -m src.detection.evaluate --weights yolo/yolo26m.pt \
+    results/detection/finetune/m960_pseudo/weights/best.pt --imgsz 960   # 4. 同一把尺子比较
+```
+
+- **划分按周切**：week1 训练、week2 验证，时间不重叠。相邻帧只差 10 分钟、画面几乎相同，随机划分会让指标虚高。
+- **白天 / 夜间按新加坡时间分层**。数据集 README 说文件名中段的 HHMM 是新加坡时间，**实际是 UTC**，`sample.py` 已按 UTC+8 处理。
+- **第 2 步产出的是伪标签**（模型猜的）。它既是人工修正的起点（`datasets/lta_yolo/` 可直接导入 CVAT 的
+  Ultralytics YOLO Detection 1.0 格式，或 Label Studio / Roboflow），也可以在人工标注完成前先跑通微调。
+  **用伪标签评估时，指标只表示「学得像不像教师」，不能当准确率引用**，`evaluate.py` 会打印这句提醒。
+  已知问题：教师模型会漏掉大量远处的摩托车，人工修正时重点补。
+- **评估为什么不用 `model.val()`**：COCO 权重 80 类、编号与本标注集对不上；`evaluate.py` 按类名统一映射后
+  自己算 mAP（COCO 101 点插值）、阈值 0.25 下的 P/R 与每图计数误差，并拆白天 / 夜间。
+- **显存**：yolo26m 在 1280 下 batch 4 约需 19 GB；Apple M4 Pro（24 GB 统一内存）上会换页、每步 45 秒，
+  降到 960 后约 11 GB、每步 1 秒。5070（12 GB）上 1280 建议 batch 2–4，或用 960。
+
+微调后的权重类名就是这四类，接入检测管线不需要写 `classes.yaml`：
+
+```bash
+python -m src.detection.run_detect --weights results/detection/finetune/<name>/weights/best.pt
+```
+
 ## 不在这里的东西
 
-数据集的选择与训练代码不在本仓库。本模块只定义**接入契约**：
+数据集的选择不在本仓库。本模块只定义**接入契约**：
 
 ```
 你的权重 + classes.yaml  ->  detections.csv / frames.csv / cameras.csv  ->  demo

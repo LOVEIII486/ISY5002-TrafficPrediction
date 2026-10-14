@@ -24,5 +24,14 @@ WEIGHTS = ROOT / "yolo" / "yolo26m.pt"
 # 否则类名对不上会静默地一个框都输出不了，见同目录 README.md。
 CLASSES_FILE = Path(__file__).resolve().parent / "classes.yaml"
 
+# 微调用的标注集（YOLO 格式）。datasets/ 不入版本控制，抽样清单 split.csv 可由
+# sample.py 按同一种子重建。
+LABELED = ROOT / "datasets" / "lta_yolo"
+SPLIT_FILE = LABELED / "split.csv"
+DATA_YAML = LABELED / "data.yaml"
+# 预标注用的教师模型：最大号的 COCO 权重，配原图分辨率推理。
+TEACHER_WEIGHTS = ROOT / "yolo" / "yolo26x.pt"
+FINETUNE_RESULTS = RESULTS / "finetune"
+
 # 相机坐标不在数据集里，取自仓库里那份 LTA 接口样本响应。
 CAMERA_COORDINATES = ROOT / "docs" / "LTA" / "TrafficImages" / "Traffic-Imagesv2.json"

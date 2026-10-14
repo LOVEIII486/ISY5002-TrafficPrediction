@@ -50,6 +50,20 @@ def load_class_map(model_names: dict) -> dict[int, str]:
     return mapping
 
 
+def pick_device():
+    """CUDA 优先，其次 Apple 芯片的 MPS，最后 CPU。
+
+    必须显式指定：ultralytics 默认把模型放在 CPU 上，实测慢 20 倍以上。
+    """
+    import torch
+
+    if torch.cuda.is_available():
+        return 0
+    if torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
+
 def ensure_weights(weights: Path) -> Path:
     """权重缺失时从 Ultralytics 官方发布下载。只对默认权重生效，自训的权重不在官方发布里。"""
     if weights.is_file():
@@ -138,7 +152,6 @@ def _box_rows(camera_id: str, captured_at: str, image: str, name: str, box, shap
 
 def detect(weights: Path, limit: int | None, imgsz: int, confidence: float, batch: int) -> None:
     try:
-        import torch
         from ultralytics import YOLO
     except ImportError as error:
         raise SystemExit(
@@ -179,8 +192,7 @@ def detect(weights: Path, limit: int | None, imgsz: int, confidence: float, batc
         print("      没有待处理的图片，结束")
         return
 
-    # 必须显式指定 device：ultralytics 默认把模型放在 CPU 上，实测慢 20 倍以上。
-    device = 0 if torch.cuda.is_available() else "cpu"
+    device = pick_device()
     print(
         f"[2/3] 权重 {weights.name} · 车辆类 {sorted(set(class_map.values()))} · "
         f"device={device} · imgsz={imgsz} · conf={confidence}"
