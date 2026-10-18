@@ -33,5 +33,14 @@ DATA_YAML = LABELED / "data.yaml"
 TEACHER_WEIGHTS = ROOT / "yolo" / "yolo26x.pt"
 FINETUNE_RESULTS = RESULTS / "finetune"
 
+# MIO-TCD 定位子集：带权威标注的公开交通监控数据集。原始 tar 放 datasets/miotcd/，
+# miotcd.py 把它转成与 lta_yolo 同构的 YOLO 目录，train.py / evaluate.py 用 --data 切换。
+# 目录带版本号：重划数据换新目录，旧版本留作历史记录。v1 的 train/val 存在重复图泄漏、v2 仍有同机位近邻帧跨集合、v3 的抠车特征对 342×228 图错位，都只作探索。
+MIOTCD_RAW = ROOT / "datasets" / "miotcd"
+MIOTCD_VERSION = "v4"
+MIOTCD_LABELED = ROOT / "datasets" / f"miotcd_yolo_{MIOTCD_VERSION}"
+# 联合训练：MIO-TCD 训练图 + LTA 训练图的路径列表，开发集仍用 MIO-TCD 真值。由 miotcd.py 生成。
+JOINT_LABELED = ROOT / "datasets" / f"joint_yolo_{MIOTCD_VERSION}"
+
 # 相机坐标不在数据集里，取自仓库里那份 LTA 接口样本响应。
 CAMERA_COORDINATES = ROOT / "docs" / "LTA" / "TrafficImages" / "Traffic-Imagesv2.json"

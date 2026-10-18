@@ -32,13 +32,18 @@ from . import paths
 from .run_detect import VEHICLE_CLASSES, load_class_map, pick_device
 
 
-def write_data_yaml() -> None:
+def write_data_yaml(split: pd.DataFrame) -> None:
+    """写清单 train.txt / val.txt 与 data.yaml。训练只读清单，不扫目录。"""
     import yaml
 
+    for name in ("train", "val"):
+        images = sorted(split[split["split"] == name]["image"])
+        listing = "\n".join(str(paths.LABELED / "images" / name / image) for image in images) + "\n"
+        (paths.LABELED / f"{name}.txt").write_text(listing, encoding="utf-8")
     config = {
         "path": str(paths.LABELED),
-        "train": "images/train",
-        "val": "images/val",
+        "train": "train.txt",
+        "val": "val.txt",
         "names": dict(enumerate(VEHICLE_CLASSES)),
     }
     paths.DATA_YAML.write_text(yaml.safe_dump(config, allow_unicode=True, sort_keys=False), encoding="utf-8")
@@ -49,6 +54,7 @@ def main() -> None:
     parser.add_argument("--teacher", type=lambda value: paths.ROOT / value, default=paths.TEACHER_WEIGHTS)
     parser.add_argument("--imgsz", type=int, default=1920, help="LTA 原图宽 1920，远处车辆只有 6–10 像素，不缩小")
     parser.add_argument("--conf", type=float, default=0.3, help="伪标签阈值，略高于检测管线的 0.25 以压低误检")
+    parser.add_argument("--overwrite", action="store_true", help="清空已有 images/ labels/ 后重建（会丢掉人工修正）")
     args = parser.parse_args()
 
     if not paths.SPLIT_FILE.is_file():
@@ -56,6 +62,16 @@ def main() -> None:
     split = pd.read_csv(paths.SPLIT_FILE, dtype={"camera_id": str})
 
     from ultralytics import YOLO
+
+    # 标签目录里可能已经有人工修正过的标签，默认绝不覆盖；确认要重建时整体清空，杜绝旧样本残留。
+    existing = list((paths.LABELED / "labels").glob("*/*.txt"))
+    if existing and not args.overwrite:
+        raise SystemExit(
+            f"{paths.LABELED / 'labels'} 下已有 {len(existing)} 个标签文件（可能含人工修正）。\n"
+            "确认要用教师预测整体重建时加 --overwrite（会清空 images/ 与 labels/）。"
+        )
+    for sub in ("images", "labels"):
+        shutil.rmtree(paths.LABELED / sub, ignore_errors=True)
 
     teacher = YOLO(str(args.teacher))
     class_map = load_class_map(teacher.names)
@@ -88,7 +104,7 @@ def main() -> None:
         if index % 40 == 0 or index == len(split):
             print(f"    {index}/{len(split)}", flush=True)
 
-    write_data_yaml()
+    write_data_yaml(split)
     report = {
         "teacher": args.teacher.name,
         "imgsz": args.imgsz,
