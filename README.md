@@ -76,6 +76,19 @@ python -m src.forecast.run_benchmark --models STGCN --seeds 0,1,2
 已完成的实验、数字、口径与已知陷阱见 **`docs/FORECAST_RESULTS.md`**。
 每次运行的原始记录在 `results/forecast/PEMSD8/<目标>/<模型>/<tag>/run.json`（已入版本控制）。
 
+旧项目的 PeMS08 结果已补入 `results/imported/pems08_cpu10_seed0/`。
+来源核对、分组对照与优化建议见 **[历史结果对比](docs/PEMS08_IMPORTED_COMPARISON.md)**。
+PEMS08 与 PEMSD8 对应同一公开基准，但两次训练协议不同，且新仓库历史数据文件未提供，
+不能直接合并排名。此次整理没有重新训练或测试。
+
+按本仓库公共协议重跑的 8 个流量模型及当前进度见
+[2026-10-13 重跑实验](docs/PEMS08_RERUN_20261013.md)。
+队列入口为 `scripts/run_flow_rerun.py`，完成的运行会跳过；
+`scripts/report_flow_rerun.py --watch` 随实验记录更新报告。
+
+所有模型统一输入为「流量 + 时刻 + 星期」9 通道后的对照见
+[2026-10-15 统一 9 通道对照](docs/PEMS08_TODOW_20261015.md)，报告由 `scripts/report_todow_comparison.py` 生成。
+
 ⚠️ **实测并发上限 2 个训练进程**（9 通道输入下每进程约 5.1 GB，三个并行会因内存耗尽而崩）。
 
 ### 检测 `src/detection/`

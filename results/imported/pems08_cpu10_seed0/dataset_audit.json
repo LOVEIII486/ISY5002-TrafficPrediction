@@ -1,0 +1,27 @@
+{
+  "benchmark_lineage": "PEMS08 is the source benchmark converted to LibCity PEMSD8",
+  "evidence_url": "https://github.com/LibCity/Bigscity-LibCity-Datasets/blob/master/pemsd8.py",
+  "legacy_shape": [
+    17856,
+    170,
+    3
+  ],
+  "interval_minutes": 5,
+  "fields": [
+    "traffic_flow",
+    "traffic_occupancy",
+    "traffic_speed"
+  ],
+  "legacy_files_sha256_verified": {
+    "pems08.npz": "e1d03ce74e9fb79149e6e7c37c680214822c4a285baa2f42278cacabcd25c075",
+    "distance.csv": "859d68e7583ed4e6016588eaaca494d3ece286dae361614c5c1833017f87eaa7"
+  },
+  "legacy_edge_rows": 295,
+  "reference_unique_directed_edges": 277,
+  "edge_note": "Official converter removes duplicate ordered pairs; binary adjacency ignores duplicate rows.",
+  "reference_data_bundle_present_at_import": false,
+  "reference_data_content_equality": "not_verified",
+  "reason": "No original training data or dataset checksum was recorded in the new repository's run.json.",
+  "same_test_samples": "not_verified; split construction and final-batch padding differ",
+  "cross_protocol_ranking_allowed": false
+}

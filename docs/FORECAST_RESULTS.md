@@ -1,5 +1,11 @@
 # 预测部分实验结果台账
 
+旧项目的 PeMS08 结果、数据来源核对与优化建议另见
+[PEMS08_IMPORTED_COMPARISON.md](PEMS08_IMPORTED_COMPARISON.md)。两次实验协议不同，
+旧结果没有加入本文原协议的排名或多种子统计。
+
+⚠️ 新增 GRU/LSTM/GWNET/AGCRN 的默认配置复现见 [PEMS08_RERUN_20261013.md](PEMS08_RERUN_20261013.md)，所有模型统一 9 通道输入的对照见 [PEMS08_TODOW_20261015.md](PEMS08_TODOW_20261015.md)。两组结果中 GWNET 均优于 MultiHeadSTGCN（seed 0），下文 §1「对最强基线 MTGNN 持平」只适用于原三个基线。
+
 本文只讲 `src/forecast/`（交通流量预测）。除注明外，所有数字为 **12 步平均**、
 **PEMSD8**、**seed 0**、5 分钟采样。
 

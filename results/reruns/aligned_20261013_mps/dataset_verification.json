@@ -1,0 +1,20 @@
+{
+  "status": "verified",
+  "shape": [
+    17856,
+    170,
+    3
+  ],
+  "rows": 3035520,
+  "fields": [
+    "traffic_flow",
+    "traffic_occupancy",
+    "traffic_speed"
+  ],
+  "raw_dtype": "float64",
+  "comparison": "all values equal as float32; entity order checked",
+  "raw_npz_sha256": "e1d03ce74e9fb79149e6e7c37c680214822c4a285baa2f42278cacabcd25c075",
+  "historical_reference_content_equality": "not_verified; original reference data unavailable",
+  "traffic_flow_float32_conversion_is_exact": true,
+  "fnn_prediction_truth_alignment": "verified for all 3584 padded windows and all 12 horizons"
+}

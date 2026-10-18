@@ -1,0 +1,45 @@
+protocol_group,model,horizon_minutes,masked_MAE,masked_RMSE,masked_MAPE_percent,aggregation,source_file,cross_protocol_ranking_allowed
+legacy_cpu10_60_20_20,persistence,15,19.568182270222966,29.795030054128727,11.980805467459096,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,persistence,30,24.25756726921942,36.67132333438881,14.93960977130238,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,persistence,60,34.69733655773002,50.485384017620525,21.696067029372564,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,persistence,all,25.28617248314574,38.646708392927415,15.635905222894744,pooled elements,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,moving_average,15,25.095592211709434,36.96059645089836,15.726708168272596,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,moving_average,30,31.046051648885143,45.27601802464189,19.581350526243334,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,moving_average,60,42.8455301856778,61.35161895993427,27.609502730541678,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,moving_average,all,32.01749596345276,47.46590118032804,20.304857533525166,pooled elements,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,seasonal_naive,15,36.574026559526885,60.785061132983564,24.57709438396547,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,seasonal_naive,30,36.56004753680456,60.77173283326447,24.58086489184145,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,seasonal_naive,60,36.50998397194178,60.72469861206391,24.58429515273751,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,seasonal_naive,all,36.55221129245437,60.76464480115247,24.580569516441088,pooled elements,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,FNN,15,17.244260436352935,26.477106120090323,10.952349440117803,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,FNN,30,20.62586197641005,31.737886182557705,13.68500102554641,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,FNN,60,28.33962095166653,42.13507144707276,18.90095037736001,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,FNN,all,21.30259302786811,32.930356751308075,14.104395073230775,pooled elements,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,GRU,15,21.470248446804167,33.850459312188505,13.513429004893862,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,GRU,30,21.72668840138587,34.29444711414005,13.629967898789976,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,GRU,60,22.758566541209568,36.136572241094676,14.17514310273608,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,GRU,all,21.8542121304798,34.535574468014,13.701476548448893,pooled elements,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,LSTM,15,21.90398277662184,34.92274370189342,13.878926829148009,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,LSTM,30,22.202609425874027,35.448274823020355,14.053271716265971,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,LSTM,60,23.172623244196515,37.058326097277536,14.627136671295146,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,LSTM,all,22.30327744924142,35.611317744284165,14.121180965552456,pooled elements,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,MTGNN,15,14.784067280766042,22.91275333030236,9.634934742829698,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,MTGNN,30,15.991593740734892,25.070747348251427,10.669161021378907,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,MTGNN,60,17.968445025589634,27.86819692248117,11.51292629518841,single horizon,results/imported/pems08_cpu10_seed0/comparison.csv,false
+legacy_cpu10_60_20_20,MTGNN,all,15.99921985345335,24.969595631410293,10.511497456803207,pooled elements,results/imported/pems08_cpu10_seed0/comparison.csv,false
+reference_cuda100_70_10_20,FNN,all,21.250797271728516,32.46755599975586,13.31096738576889,mean of per-horizon metrics,results/forecast/PEMSD8/traffic_flow/FNN/seed0/run.json,false
+reference_cuda100_70_10_20,FNN,15,17.247024536132812,26.587451934814453,10.633974522352219,single horizon,results/forecast/PEMSD8/traffic_flow/FNN/seed0/run.json,false
+reference_cuda100_70_10_20,FNN,30,20.609493255615234,31.915998458862305,12.801550328731537,single horizon,results/forecast/PEMSD8/traffic_flow/FNN/seed0/run.json,false
+reference_cuda100_70_10_20,FNN,60,28.20977210998535,42.23575210571289,17.992278933525085,single horizon,results/forecast/PEMSD8/traffic_flow/FNN/seed0/run.json,false
+reference_cuda100_70_10_20,STGCN,all,17.605215072631836,26.796232223510742,11.339610815048218,mean of per-horizon metrics,results/forecast/PEMSD8/traffic_flow/STGCN/seed0/run.json,false
+reference_cuda100_70_10_20,STGCN,15,15.127427101135254,23.294755935668945,9.819875657558441,single horizon,results/forecast/PEMSD8/traffic_flow/STGCN/seed0/run.json,false
+reference_cuda100_70_10_20,STGCN,30,17.393619537353516,26.5703067779541,11.212211847305298,single horizon,results/forecast/PEMSD8/traffic_flow/STGCN/seed0/run.json,false
+reference_cuda100_70_10_20,STGCN,60,21.52433204650879,32.376136779785156,13.652366399765015,single horizon,results/forecast/PEMSD8/traffic_flow/STGCN/seed0/run.json,false
+reference_cuda100_70_10_20,MTGNN,all,14.876635551452637,23.68730926513672,9.693875163793564,mean of per-horizon metrics,results/forecast/PEMSD8/traffic_flow/MTGNN/seed0/run.json,false
+reference_cuda100_70_10_20,MTGNN,15,13.967452049255371,22.055395126342773,9.133101254701614,single horizon,results/forecast/PEMSD8/traffic_flow/MTGNN/seed0/run.json,false
+reference_cuda100_70_10_20,MTGNN,30,14.832983016967773,23.720447540283203,9.7036674618721,single horizon,results/forecast/PEMSD8/traffic_flow/MTGNN/seed0/run.json,false
+reference_cuda100_70_10_20,MTGNN,60,16.353303909301758,26.15035629272461,10.680034011602402,single horizon,results/forecast/PEMSD8/traffic_flow/MTGNN/seed0/run.json,false
+reference_cuda100_70_10_20,MultiHeadSTGCN,all,14.901829719543457,23.714052200317383,9.95851755142212,mean of per-horizon metrics,results/forecast/PEMSD8/traffic_flow/MultiHeadSTGCN/seed0/run.json,false
+reference_cuda100_70_10_20,MultiHeadSTGCN,15,14.299161911010742,22.46803092956543,9.52504649758339,single horizon,results/forecast/PEMSD8/traffic_flow/MultiHeadSTGCN/seed0/run.json,false
+reference_cuda100_70_10_20,MultiHeadSTGCN,30,14.893502235412598,23.794157028198242,9.949910640716553,single horizon,results/forecast/PEMSD8/traffic_flow/MultiHeadSTGCN/seed0/run.json,false
+reference_cuda100_70_10_20,MultiHeadSTGCN,60,16.029075622558594,25.74350357055664,10.731589794158936,single horizon,results/forecast/PEMSD8/traffic_flow/MultiHeadSTGCN/seed0/run.json,false

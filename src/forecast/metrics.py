@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+import json
 
 from .protocols import Protocol
 
@@ -89,3 +90,13 @@ def aggregate(records: list[dict]) -> dict:
             "n": int(values.size),
         }
     return out
+
+
+def aggregate_by_model(records: list[dict]) -> list[dict]:
+    """Aggregate seeds only within the same dataset/model/configuration."""
+    groups = {}
+    for record in records:
+        identity = {key: record.get(key) for key in ("dataset", "targets", "model", "effective", "overrides")}
+        key = json.dumps(identity, sort_keys=True)
+        groups.setdefault(key, (identity, []))[1].append(record)
+    return [{**identity, "metrics": aggregate(items)} for identity, items in groups.values()]

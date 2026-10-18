@@ -1,0 +1,116 @@
+{
+  "source_repository": "https://github.com/LOVEIII486/ISY5002-Traffic-Recognition",
+  "source_run": "results/pems08/flow_10epoch_batch8_seed0",
+  "source_protocol_id": "44a4d4935e547b085848e715d7ca3ce57757c4fb6f0717106715118a6199ba3c",
+  "source_run_status": "stopped_by_user",
+  "source_state_note": "Experiment scripts/results were uncommitted; file hashes identify the evidence.",
+  "completed_models": [
+    "FNN",
+    "GRU",
+    "LSTM",
+    "MTGNN"
+  ],
+  "unfinished_models": [
+    "GWNET",
+    "AGCRN",
+    "STGCN"
+  ],
+  "naive_baselines": [
+    "moving_average",
+    "persistence",
+    "seasonal_naive"
+  ],
+  "original_files": [
+    {
+      "source": "results/pems08/flow_10epoch_batch8_seed0/run_config.json",
+      "destination": "run_config.json",
+      "bytes": 3396,
+      "sha256": "453227d561bbd7e7f75b14ab8a5ae81fd7b348442c3c9d660ed063d13e041c55"
+    },
+    {
+      "source": "results/pems08/flow_10epoch_batch8_seed0/comparison.csv",
+      "destination": "comparison.csv",
+      "bytes": 6565,
+      "sha256": "8535a5b685d5a77458a5d6ee4474a1ce3c2a5bee8754cc296b5622b82b7844ea"
+    },
+    {
+      "source": "datasets/external/PEMS08/metadata.json",
+      "destination": "dataset_metadata.json",
+      "bytes": 877,
+      "sha256": "5d8d33e52f89634b76cd16ae9b5f44d5217d40a4efb51ef4dc0ebcc1250e48a1"
+    },
+    {
+      "source": "src/11_run_pems08_benchmarks.py",
+      "destination": "source_snapshot/legacy_runner.py",
+      "bytes": 18394,
+      "sha256": "9611622b43edf3707a9989ee89794b2711caa4c6c1bf0c6a819a93af77597977"
+    },
+    {
+      "source": "src/10_prepare_pems08.py",
+      "destination": "source_snapshot/legacy_prepare.py",
+      "bytes": 4417,
+      "sha256": "8b28b97d6de67fd5bd63db0f59729f7fbc1e143a7c77f708b523477a79b5a207"
+    },
+    {
+      "source": "results/pems08/flow_10epoch_batch8_seed0/fnn/architecture_config.json",
+      "destination": "models/fnn/architecture_config.json",
+      "bytes": 668,
+      "sha256": "d2b6c46d59c849be6b2e1bcaebfb8e5277018978a3748144868ccc9fc5e08ae6"
+    },
+    {
+      "source": "results/pems08/flow_10epoch_batch8_seed0/fnn/training_history.csv",
+      "destination": "models/fnn/training_history.csv",
+      "bytes": 673,
+      "sha256": "86482ffd3cac4e280df266e76cc2cd28d07ba1e27eea806de95a401cd67db419"
+    },
+    {
+      "source": "results/pems08/flow_10epoch_batch8_seed0/gru/architecture_config.json",
+      "destination": "models/gru/architecture_config.json",
+      "bytes": 724,
+      "sha256": "fd555069605b67d0ed7f5495a572e375793f9b231ec9e4d2cec1814b8b7a0c9b"
+    },
+    {
+      "source": "results/pems08/flow_10epoch_batch8_seed0/gru/training_history.csv",
+      "destination": "models/gru/training_history.csv",
+      "bytes": 678,
+      "sha256": "6d5b5d885a35aeeae2cd63b1de106ddce3dcd2b2f3e758b876426f151aef8f1d"
+    },
+    {
+      "source": "results/pems08/flow_10epoch_batch8_seed0/lstm/architecture_config.json",
+      "destination": "models/lstm/architecture_config.json",
+      "bytes": 725,
+      "sha256": "2228e7c7261475d5270df76bfa465bc5b7e3cb8f4c18fd5b6e5f10e8e6164702"
+    },
+    {
+      "source": "results/pems08/flow_10epoch_batch8_seed0/lstm/training_history.csv",
+      "destination": "models/lstm/training_history.csv",
+      "bytes": 674,
+      "sha256": "36f30235c93f4039bc57f688d2829139c0c56091f60ce89be41bdade7d4a0e13"
+    },
+    {
+      "source": "results/pems08/flow_10epoch_batch8_seed0/mtgnn/architecture_config.json",
+      "destination": "models/mtgnn/architecture_config.json",
+      "bytes": 949,
+      "sha256": "2fd050eeead8193f74277f79272453ceb959e2be172023dbf2699ef32b20872d"
+    },
+    {
+      "source": "results/pems08/flow_10epoch_batch8_seed0/mtgnn/training_history.csv",
+      "destination": "models/mtgnn/training_history.csv",
+      "bytes": 675,
+      "sha256": "e6902ebdf482f0cf2f82f62f9e289b40226206460c4bd96bbceb9dae55371aab"
+    },
+    {
+      "source": "results/pems08/flow_10epoch_batch8_seed0/gwnet/architecture_config.json",
+      "destination": "models/gwnet/architecture_config.json",
+      "bytes": 925,
+      "sha256": "adcc38d39a2da2e04fc20c2c099589d44fdefafef440c214dba496ce5efaeb07"
+    },
+    {
+      "source": "results/pems08/flow_10epoch_batch8_seed0/gwnet/training_history.csv",
+      "destination": "models/gwnet/training_history.csv",
+      "bytes": 362,
+      "sha256": "1a4e59c356bc51e640911dd8877aca21fa731c6ebdcf65939357159319c6302c"
+    }
+  ],
+  "note": "No training, model inference, or test evaluation was performed during import."
+}

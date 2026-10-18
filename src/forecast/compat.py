@@ -149,16 +149,31 @@ def _install_executor_package() -> None:
 
 def load_model_module(model_name: str) -> ModuleType:
     """按文件路径装载模型模块，绕开会导入 dgl 的模型包 __init__。"""
-    path = MODEL_DIR / f"{model_name}.py"
+    filename = "RNN" if model_name in ("GRU", "LSTM") else model_name
+    family = "traffic_flow_prediction" if model_name == "AGCRN" else "traffic_speed_prediction"
+    path = LIBCITY_ROOT / "libcity/model" / family / f"{filename}.py"
     if not path.is_file():
         raise FileNotFoundError(f"模型文件不存在：{path}")
-    return _load_module_by_path(f"libcity_model_{model_name.lower()}", path)
+    module = _load_module_by_path(f"libcity_model_{model_name.lower()}", path)
+    if model_name == "GWNET":
+        # This pinned implementation feeds 4-D inputs to layers with 2-D kernels.
+        # Limit the compatibility fix to this loaded module.
+        import torch.nn as nn
+
+        class Layers:
+            Conv1d = nn.Conv2d
+
+            def __getattr__(self, name):
+                return getattr(nn, name)
+
+        module.nn = Layers()
+    return module
 
 
 def load_model_class(model_name: str):
     """按名字取模型类。"""
     module = load_model_module(model_name)
-    return getattr(module, model_name)
+    return getattr(module, "RNN" if model_name in ("GRU", "LSTM") else model_name)
 
 
 def load_executor_class(name: str = "TrafficStateExecutor"):
