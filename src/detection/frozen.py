@@ -9,7 +9,8 @@ import hashlib
 import json
 from pathlib import Path
 
-VERSIONED_PREFIXES = ("miotcd_yolo_", "joint_yolo_")
+# lta_human_：人工修正的 LTA 测试集（annotate.py collect 生成），只用于评估，不用于训练
+VERSIONED_PREFIXES = ("miotcd_yolo_", "joint_yolo_", "lta_human_")
 
 
 def sha256_16(path: Path) -> str:
@@ -57,6 +58,8 @@ def check_data_yaml(data_yaml: Path) -> None:
     if not root.name.startswith(VERSIONED_PREFIXES):
         print(f"[frozen] {root.name} 不是版本化数据目录，没有冻结记录可核对")
         return
+    if root.name.startswith("lta_human_"):
+        raise SystemExit(f"{root.name} 是人工修正的测试集，只用于评估，不能用来训练")
     if root.name.startswith("miotcd_yolo_"):
         meta = _load_meta(root)
         _check_split(root, meta, "train", train)
