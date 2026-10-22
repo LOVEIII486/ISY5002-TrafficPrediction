@@ -40,6 +40,30 @@ results/forecast/PEMSD8/*/*/*
 !results/forecast/PEMSD8/*/*/*/
 results/forecast/PEMSD8/*/*/*/*
 !results/forecast/PEMSD8/*/*/*/run.json
+!results/forecast/PEMSD8/*/*/*/status.json
+!results/forecast/PEMSD8/*/*/*/resolved_config.json
+!results/forecast/PEMSD8/*/*/*/data_provenance.json
+!results/forecast/PEMSD8/*/*/*/training_history.csv
+
+!results/reruns/
+results/reruns/*
+!results/reruns/aligned_20261013_mps/
+results/reruns/aligned_20261013_mps/*
+!results/reruns/aligned_20261013_mps/status.json
+!results/reruns/aligned_20261013_mps/comparison.csv
+!results/reruns/aligned_20261013_mps/dataset_verification.json
+!results/reruns/todow_20261015_mps/
+results/reruns/todow_20261015_mps/*
+!results/reruns/todow_20261015_mps/status.json
+!results/reruns/todow_20261015_mps/comparison.csv
+
+# 历史 PeMS08 实验的轻量记录与数据核对材料。
+!results/imported/
+results/imported/*
+!results/imported/pems08_cpu10_seed0/
+results/imported/**/*.pt
+results/imported/**/*.tar
+results/imported/**/*.npz
 
 notes/
 

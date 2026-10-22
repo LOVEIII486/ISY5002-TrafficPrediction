@@ -1,0 +1,45 @@
+{
+  "FNN": {
+    "status": "completed",
+    "epochs_recorded": 10,
+    "best_validation_epoch": 9,
+    "best_validation_normalized_MAE": 0.1511018789023532,
+    "last_validation_normalized_MAE": 0.15153499279915134
+  },
+  "GRU": {
+    "status": "completed",
+    "epochs_recorded": 10,
+    "best_validation_epoch": 7,
+    "best_validation_normalized_MAE": 0.15841704460668116,
+    "last_validation_normalized_MAE": 0.15855295236633166
+  },
+  "LSTM": {
+    "status": "completed",
+    "epochs_recorded": 10,
+    "best_validation_epoch": 10,
+    "best_validation_normalized_MAE": 0.16430032680126716,
+    "last_validation_normalized_MAE": 0.16430032680126716
+  },
+  "MTGNN": {
+    "status": "completed",
+    "epochs_recorded": 10,
+    "best_validation_epoch": 8,
+    "best_validation_normalized_MAE": 0.11197354692751144,
+    "last_validation_normalized_MAE": 0.11455464414983299
+  },
+  "GWNET": {
+    "status": "interrupted_without_test_metrics",
+    "epochs_recorded": 5,
+    "best_validation_epoch": 2,
+    "best_validation_normalized_MAE": 0.13101115423455784,
+    "last_validation_normalized_MAE": 0.13754978224518735
+  },
+  "AGCRN": {
+    "status": "not_started",
+    "epochs_recorded": 0
+  },
+  "STGCN": {
+    "status": "not_started",
+    "epochs_recorded": 0
+  }
+}

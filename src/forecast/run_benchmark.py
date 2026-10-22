@@ -47,6 +47,8 @@ def parse_args(argv=None):
     )
     parser.add_argument("--tag", default="", help="产物目录后缀；不填则由 --set 自动生成")
     parser.add_argument("--cpu", action="store_true")
+    parser.add_argument("--device", choices=("cpu", "cuda", "mps"), default=None)
+    parser.add_argument("--threads", type=int, default=4)
     return parser.parse_args(argv)
 
 
@@ -122,7 +124,7 @@ def write_summary(records: list[dict], dataset_name: str, targets: tuple[str, ..
 
     (out_dir / "summary.json").write_text(
         json.dumps(
-            {"runs": records, "aggregate": metrics_module.aggregate(records)},
+            {"runs": records, "aggregate": metrics_module.aggregate_by_model(records)},
             indent=2,
             ensure_ascii=False,
         ),
@@ -133,6 +135,10 @@ def write_summary(records: list[dict], dataset_name: str, targets: tuple[str, ..
 
 def main(argv=None) -> int:
     args = parse_args(argv)
+    import torch
+    if args.threads < 1 or (args.cpu and args.device not in (None, "cpu")):
+        raise SystemExit("Invalid thread count or conflicting --cpu/--device")
+    torch.set_num_threads(args.threads)
     dataset = datasets.resolve(args.dataset)
     targets = resolve_targets(dataset, args.targets)
     models = registry.available() if args.models == "all" else [
@@ -168,10 +174,13 @@ def main(argv=None) -> int:
                 batch_size=args.batch_size,
                 extra_args=extra_args or None,
                 tag=tag,
+                requested_device="cpu" if args.cpu else args.device,
             )
             for target, series in record["per_target"].items():
                 print(f"    {target:<20}{brief(series)}  用时 {record['train_seconds']:.0f}s")
             records.append(record)
+            # Keep completed scores if a later model fails or the run is stopped.
+            write_summary(records, args.dataset, targets)
 
     print_table(records, args.dataset, targets)
     write_summary(records, args.dataset, targets)

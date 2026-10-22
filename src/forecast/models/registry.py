@@ -83,8 +83,12 @@ SPECS: tuple[ModelSpec, ...] = (
             "step_size": 5,
         },
     ),
+    ModelSpec("GRU", 4, "libcity", _libcity("GRU")),
+    ModelSpec("LSTM", 5, "libcity", _libcity("LSTM")),
+    ModelSpec("GWNET", 6, "libcity", _libcity("GWNET")),
+    ModelSpec("AGCRN", 7, "libcity", _libcity("AGCRN")),
 )
-# GWNET 未登记：该 checkout 的实现把 4 维张量传给 conv1d，任何配置下都在前向崩溃。
+# GWNET 的二维卷积兼容修正在 compat.load_model_module 内，原始第三方源码不变。
 
 REGISTRY: dict[str, ModelSpec] = {spec.name: spec for spec in SPECS}
 

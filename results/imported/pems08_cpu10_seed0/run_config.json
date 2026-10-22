@@ -1,0 +1,100 @@
+{
+  "protocol_id": "44a4d4935e547b085848e715d7ca3ce57757c4fb6f0717106715118a6199ba3c",
+  "protocol": {
+    "dataset": "PEMS08",
+    "data_checksums": {
+      "pems08.npz": {
+        "git_blob_sha1": "f5f3e84a00417573aa8487fe1e9e8cd13c6026c8",
+        "sha256": "e1d03ce74e9fb79149e6e7c37c680214822c4a285baa2f42278cacabcd25c075",
+        "bytes": 18525419
+      },
+      "distance.csv": {
+        "git_blob_sha1": "cf11bea3ff4229d2d900fdcf1085828d25429c88",
+        "sha256": "859d68e7583ed4e6016588eaaca494d3ece286dae361614c5c1833017f87eaa7",
+        "bytes": 4032
+      }
+    },
+    "target": "traffic_flow",
+    "inputs": [
+      "traffic_flow"
+    ],
+    "interval_minutes": 5,
+    "input_window": 12,
+    "output_window": 12,
+    "train_end_index": 10713,
+    "validation_end_index": 14284,
+    "split_policy": "chronological; target windows remain wholly inside each split",
+    "split_samples": {
+      "train": 10690,
+      "validation": 3560,
+      "test": 3561
+    },
+    "scaler": {
+      "type": "standard",
+      "fit": "training timestamps only",
+      "mean": 229.6612548828125,
+      "std": 145.6415557861328
+    },
+    "graph": "binary, bidirectional, source distance.csv edges",
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "loss": "MAE excluding zero targets",
+    "batch_size": 8,
+    "max_epochs": 10,
+    "patience": 10,
+    "gradient_clip_norm": 5,
+    "seed": 0,
+    "device": "cpu",
+    "threads": 4,
+    "libcity_model_sha256": {
+      "FNN": "c45f7c22ae07681f5c395e2e0f87a39f622bc2b626120c7621a67b2caeac98e9",
+      "STGCN": "a6f56c535050569ec399000d9baa77abd9e2b93bee7b99ddc0fb25e984fe7f06",
+      "MTGNN": "79efbc7dd82b40f2ebfa533d482334ab3ad01513c88ef095ef588fc08690084b",
+      "GRU": "cc6ef36a506ae1bc615a3d822425e4f1d1a91489d29cc1fcf0a1f75b6ea20c77",
+      "LSTM": "cc6ef36a506ae1bc615a3d822425e4f1d1a91489d29cc1fcf0a1f75b6ea20c77",
+      "GWNET": "f861dda8e1d99f0a97fa40b2875def02f8cebb0b71810fc38d7f471934a64a19",
+      "AGCRN": "9ed016d4c38c7bd23d5f3217f43ba7a91b21a283cf2fc39a70d5a801b666d491"
+    },
+    "runner_sha256": "9611622b43edf3707a9989ee89794b2711caa4c6c1bf0c6a819a93af77597977",
+    "smoke": false,
+    "libcity_default_config_sha256": {
+      "FNN": "a4bc8dcb24fab2f3b555740e024ac276a235c97f334810ae92872300ba9e4b2c",
+      "STGCN": "df2dee020debaa62e24692519f5ca38af7367b38bc4a180b5d76550f1a1f19c8",
+      "MTGNN": "c69fce9deb3121977c0aedeee821c78f3e67b87ea7dbe8c114c7775f1636c0c8",
+      "GRU": "79a3d7500d1045e6bd9a76855036493da1a63faf3dbc8603bf64a2da69f29170",
+      "LSTM": "79a3d7500d1045e6bd9a76855036493da1a63faf3dbc8603bf64a2da69f29170",
+      "GWNET": "0516d598d1229487c3397db483b80e4035e427f31119c901cb6545708c9de574",
+      "AGCRN": "da6cfb95a88d257aa13f476f39aa5ab85604466aadfbdf329228e59c4c10b5b6"
+    },
+    "software": {
+      "torch": "2.14.0",
+      "numpy": "2.5.2"
+    }
+  },
+  "models": [
+    "FNN",
+    "GRU",
+    "LSTM",
+    "MTGNN",
+    "GWNET",
+    "AGCRN",
+    "STGCN"
+  ],
+  "status": "stopped_by_user",
+  "source": "https://github.com/Davidham3/ASTGCN-2019-mxnet/tree/master/data/PEMS08",
+  "runner": "LibCity models with shared PyTorch loop",
+  "reference": null,
+  "error": "KeyboardInterrupt: ",
+  "stop_reason": "User requested no further tests or training.",
+  "completed_models": [
+    "FNN",
+    "GRU",
+    "LSTM",
+    "MTGNN"
+  ],
+  "unfinished_models": [
+    "GWNET",
+    "AGCRN",
+    "STGCN"
+  ]
+}

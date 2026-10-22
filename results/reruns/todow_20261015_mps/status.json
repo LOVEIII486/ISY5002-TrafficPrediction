@@ -1,0 +1,58 @@
+{
+  "status": "completed",
+  "pid": 42038,
+  "target": "traffic_flow",
+  "seed": 0,
+  "models": {
+    "GWNET": "completed",
+    "MTGNN": "completed",
+    "AGCRN": "completed",
+    "STGCN": "completed",
+    "GRU": "completed",
+    "LSTM": "completed",
+    "FNN": "completed"
+  },
+  "tag": "todow_20261015_mps",
+  "device": "mps",
+  "overrides": [
+    "load_external=true",
+    "add_time_in_day=true",
+    "add_day_in_week=true"
+  ],
+  "protocol": {
+    "train_rate": 0.7,
+    "eval_rate": 0.1,
+    "input_window": 12,
+    "output_window": 12,
+    "batch_size": 64,
+    "max_epoch": 100,
+    "patience": 30
+  },
+  "command": [
+    "/Users/waiwai/workspace/ISY-5002/project/ISY5002-Traffic-Recognition/.venv/bin/python",
+    "-u",
+    "-m",
+    "src.forecast.run_benchmark",
+    "--dataset",
+    "PEMSD8",
+    "--targets",
+    "traffic_flow",
+    "--models",
+    "FNN",
+    "--seeds",
+    "0",
+    "--device",
+    "mps",
+    "--threads",
+    "4",
+    "--tag",
+    "todow_20261015_mps",
+    "--set",
+    "load_external=true",
+    "--set",
+    "add_time_in_day=true",
+    "--set",
+    "add_day_in_week=true"
+  ],
+  "child_pid": 82541
+}

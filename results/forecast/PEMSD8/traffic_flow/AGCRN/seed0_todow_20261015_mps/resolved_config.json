@@ -1,0 +1,133 @@
+{
+  "task": "traffic_state_pred",
+  "model": "AGCRN",
+  "dataset": "PEMSD8",
+  "saved_model": true,
+  "train": true,
+  "train_rate": 0.7,
+  "eval_rate": 0.1,
+  "input_window": 12,
+  "output_window": 12,
+  "batch_size": 64,
+  "max_epoch": 100,
+  "use_early_stop": true,
+  "patience": 30,
+  "clip_grad_norm": true,
+  "max_grad_norm": 5.0,
+  "data_col": [
+    "traffic_flow"
+  ],
+  "output_dim": 1,
+  "cache_dataset": false,
+  "gpu": false,
+  "gpu_id": 0,
+  "seed": 0,
+  "exp_id": 1710277,
+  "time_intervals": 300,
+  "load_external": true,
+  "add_time_in_day": true,
+  "add_day_in_week": true,
+  "run_tag": "todow_20261015_mps",
+  "dataset_class": "TrafficStatePointDataset",
+  "executor": "TrafficStateExecutor",
+  "evaluator": "TrafficStateEvaluator",
+  "embed_dim": 10,
+  "rnn_units": 64,
+  "num_layers": 2,
+  "cheb_order": 2,
+  "bidir_adj_mx": true,
+  "scaler": "standard",
+  "normal_external": false,
+  "ext_scaler": "none",
+  "learner": "adam",
+  "learning_rate": 0.003,
+  "lr_decay": false,
+  "num_workers": 0,
+  "pad_with_last_sample": true,
+  "robustness_test": false,
+  "noise_type": "gaussian",
+  "disturb_rate": 0.5,
+  "noise_mean": [
+    5
+  ],
+  "noise_SD": [
+    10
+  ],
+  "train_loss": "none",
+  "epoch": 0,
+  "weight_decay": 0,
+  "lr_epsilon": 1e-08,
+  "lr_beta1": 0.9,
+  "lr_beta2": 0.999,
+  "lr_alpha": 0.99,
+  "lr_momentum": 0,
+  "lr_scheduler": "multisteplr",
+  "lr_decay_ratio": 0.1,
+  "steps": [
+    5,
+    20,
+    40,
+    70
+  ],
+  "step_size": 10,
+  "lr_T_max": 30,
+  "lr_eta_min": 0,
+  "lr_patience": 10,
+  "lr_threshold": 0.0001,
+  "log_level": "INFO",
+  "log_every": 1,
+  "load_best_epoch": true,
+  "hyper_tune": false,
+  "metrics": [
+    "MAE",
+    "MAPE",
+    "MSE",
+    "RMSE",
+    "masked_MAE",
+    "masked_MAPE",
+    "masked_MSE",
+    "masked_RMSE",
+    "R2",
+    "EVAR"
+  ],
+  "evaluator_mode": "single",
+  "save_mode": [
+    "csv"
+  ],
+  "geo": {
+    "including_types": [
+      "Point"
+    ],
+    "Point": {}
+  },
+  "rel": {
+    "including_types": [
+      "geo"
+    ],
+    "geo": {
+      "cost": "num"
+    }
+  },
+  "dyna": {
+    "including_types": [
+      "state"
+    ],
+    "state": {
+      "entity_id": "geo_id",
+      "traffic_flow": "num",
+      "traffic_occupancy": "num",
+      "traffic_speed": "num"
+    }
+  },
+  "data_files": [
+    "PEMSD8"
+  ],
+  "geo_file": "PEMSD8",
+  "rel_file": "PEMSD8",
+  "weight_col": "cost",
+  "init_weight_inf_or_zero": "zero",
+  "set_weight_link_or_dist": "link",
+  "calculate_weight_adj": false,
+  "weight_adj_epsilon": 0.1,
+  "device": "mps"
+}
