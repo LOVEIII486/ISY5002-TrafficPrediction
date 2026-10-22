@@ -1,0 +1,50 @@
+% Human-labeled LTA evaluation.
+%
+% This file is not included in main.tex yet. To enable it:
+%   1. Freeze the human-labeled LTA test set and run the same evaluator used
+%      for the teacher-reference results.
+%   2. Replace the placeholders below with the new sample size, metrics and
+%      interpretation.
+%   3. Add \input{chapters/05-human-lta} at HUMAN-LTA-SLOT in
+%      chapters/05-results-and-analysis.tex.
+%
+% Inserting this file after Section 5.8 makes it Section 5.9. Existing results
+% tables and figures keep their numbers; only later appendix numbering may move.
+
+\subsection{Human-Labeled LTA Evaluation}\label{sec:results-human-lta}
+
+The LTA results in Section~\ref{sec:results-lta} use the frozen YOLO26x teacher
+as reference. The human-labeled test set provides an independent accuracy
+measurement, with the same four-class evaluator and the same confidence
+threshold. It contains [N] images from [cameras and period].
+
+Table~\ref{tab:lta-human} reports the three models on this set.
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Human-labeled LTA test set ([N] images). mAP@0.5 includes 95\%
+  bootstrap intervals.}
+  \label{tab:lta-human}
+  \begin{tabular}{@{}lccccccc@{}}
+    \toprule
+    Model & mAP@0.5 & mAP@.5--.95 & Car & Moto. & Bus & Truck & Count MAE \\
+    \midrule
+    Pretrained YOLO26m & -- & -- & -- & -- & -- & -- & -- \\
+    MIO-TCD only       & -- & -- & -- & -- & -- & -- & -- \\
+    Joint fine-tuning  & -- & -- & -- & -- & -- & -- & -- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+[Replace this paragraph with the quantitative comparison, confidence intervals
+and the effect of replacing the teacher reference. If the conclusion differs
+from Section~\ref{sec:results-lta}, state the difference explicitly.]
+
+% Optional figure slot:
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=\linewidth]{human_lta_examples.png}
+%   \caption{Detection examples on the human-labeled LTA test set.}
+%   \label{fig:human-lta-examples}
+% \end{figure}

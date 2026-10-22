@@ -1,0 +1,64 @@
+\section{Literature Review}\label{sec:literature}
+
+Traffic monitoring systems combine sensing and prediction. This section reviews
+the two lines of work that inform the prototype: vehicle detection in traffic
+imagery and spatio-temporal traffic forecasting. It also covers the evaluation
+practices used to compare the resulting models.
+
+\subsection{Vehicle Detection in Traffic Imagery}\label{sec:literature-detection}
+
+One-stage detectors are the usual choice for traffic imagery because a single
+forward pass returns boxes and classes at near-real-time speed
+\parencite{ultralytics2026yolo}. COCO-pretrained weights are a strong starting
+point \parencite{lin2014coco}, but the COCO camera geometry differs from fixed,
+high-mounted traffic cameras. MIO-TCD provides a traffic-specific benchmark with
+137,743 human-labeled localization frames from thousands of traffic cameras
+\parencite{luo2018miotcd}. When target-domain
+labels are unavailable, pseudo-labeling is a common approach: a teacher model
+labels unlabeled images, and a student is trained on the resulting hard labels
+\parencite{lee2013pseudo}. When the same teacher also supplies the evaluation
+reference, the resulting score measures agreement with the teacher; the LTA
+results in this report are interpreted on that basis.
+
+\subsection{Traffic Forecasting}\label{sec:literature-forecasting}
+
+Spatio-temporal graph models are widely studied for road-network forecasting.
+STGCN combines temporal convolution with graph convolution
+\parencite{yu2018stgcn}; Graph WaveNet learns an adaptive adjacency and uses
+dilated temporal convolutions \parencite{wu2019gwnet}; MTGNN learns a graph and a
+multi-step curriculum \parencite{wu2020mtgnn}; AGCRN uses node-specific
+embeddings instead of a fixed adjacency \parencite{bai2020agcrn}. LibCity
+provides a common implementation and evaluation environment
+\parencite{wang2021libcity,jiang2023libcity}. In comparative studies, the models
+are often trained with different input channels, optimizers and early-stopping
+rules, so an observed difference reflects both architecture and training
+recipe. The eight models compared in this project span feed-forward, recurrent,
+fixed-graph, learned-graph and node-embedding designs, which gives the benchmark
+coverage of the main modeling families rather than a single architecture.
+
+\subsection{Evaluation and Benchmarking}\label{sec:literature-evaluation}
+
+Frames from the same camera are highly correlated, so random image-level splits
+leak near-duplicates into the test set. We group images by scene before
+splitting and resample whole groups for confidence intervals. Detection accuracy
+is reported with COCO-style mAP \parencite{lin2014coco}; uncertainty is estimated
+with bootstrap resampling \parencite{efron1993bootstrap}. Forecasting comparisons
+are most informative when every model receives the same input information; the
+benchmark therefore reports both native configurations and a unified
+nine-channel setting.
+
+\subsection{Synthesis and Research Gap}\label{sec:literature-gap}
+
+Across these lines of work, detection and forecasting are usually evaluated on
+different data representations: annotated images for recognition and calibrated
+sensor series for forecasting. Detection studies also face a cross-camera
+adaptation problem when the target cameras differ in viewpoint, scale and
+lighting from the training benchmark. Forecasting comparisons add a second
+problem: native configurations differ in input features and training recipes, so
+a ranking mixes architecture with implementation choices. Monitoring
+integration raises a third problem: the two components produce different
+outputs, at different time scales, and their data domains must remain visible to
+the user. These gaps motivate a modular prototype that evaluates each component
+on its own domain, reports both native and unified-input forecasting
+comparisons, and makes the boundary between the two data sources explicit in
+the interface.

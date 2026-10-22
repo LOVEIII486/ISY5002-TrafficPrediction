@@ -1,0 +1,107 @@
+\section{Experimental Setup}\label{sec:setup}
+
+\subsection{Datasets}\label{sec:setup-data}
+
+The LTA collection contains 15,316 images from eight Singapore cameras over two
+weeks, sampled at ten-minute intervals.\footnote{Collected from the LTA Traffic
+Images API (data.gov.sg):
+\url{https://data.gov.sg/datasets/d_6cdb6b405b25aaaacbaf7689bcc6fae0/view}.
+The collection is mirrored at
+\url{https://huggingface.co/datasets/LOVEIII486/isy5002-lta-traffic-images}.}
+Week~1 and week~2 are disjoint in time.
+For detection fine-tuning, 240 week-1 images are used for training and 80
+week-2 images for validation, stratified by camera and by Singapore-time
+day/night. The 240 training images also provide the pseudo-labeled
+target-domain set used in joint fine-tuning. The labels are generated from
+these images by YOLO26x; they are derived labels generated within the project.
+Nighttime frames are a particular constraint: vehicles are small and poorly
+lit, and even human annotation is difficult. Teacher labels and human labels
+collected at night are therefore the least reliable reference.
+Figure~\ref{fig:detection-examples} shows representative frames and labels from
+both detection datasets.
+
+MIO-TCD provides the human-labeled detection benchmark
+\parencite{luo2018miotcd}.\footnote{The MIO-TCD localization dataset is
+available at \url{https://tcd.miovision.com/}; paper DOI:
+\url{https://doi.org/10.1109/TIP.2018.2848705}.}
+Its localization set contains 137,743 annotated frames; the training release
+used here contains 110,000 images. We map its eleven classes to four: work vans
+to car; pickup, single-unit and articulated trucks to truck; bus and motorcycle
+unchanged. Pedestrian, bicycle and non-motorized-vehicle boxes are dropped, and
+images containing the class \texttt{motorized\_vehicle} (vehicles too small to
+classify) are removed, leaving 89,701 images. Because many images are consecutive
+frames from the same camera, we link images when they share a file hash, when
+their 256-bit difference-hash distance is at most 16, when their background
+thumbnails correlate at 0.95 or above, or when their vehicle-masked background
+thumbnails correlate at 0.93 or above; connected components form 1,592 scene
+groups. Whole groups are assigned to pools, and fixed-size samples are drawn
+from the pools: 8,000 training images, 1,000 development images, 2,000 test
+images and a 161-image motorcycle diagnostic split. The fixed caps keep the
+30-epoch fine-tuning runs tractable and preserve rare-class coverage; the
+remaining filtered images are not used. The test split contains 31 scene groups
+and is evaluated once. Our splits are drawn from its training set; the official
+test labels are not public.
+
+PEMSD8 provides the forecasting benchmark: 170 sensors and 17,856 five-minute
+observations. The series is distributed by LibCity \parencite{jiang2023libcity};
+the raw measurements come from Caltrans PeMS.\footnote{Caltrans PeMS:
+\url{https://pems.dot.ca.gov/}; LibCity dataset repository:
+\url{https://github.com/LibCity/Bigscity-LibCity-Datasets}.}
+The common protocol uses a 7:1:2 chronological split, 12 input steps and 12
+output steps. The scaler is fitted on the training input windows, and the test
+window indices are recorded for every run.
+Figure~\ref{fig:pemsd8-series} shows a representative sensor series and its
+daily profile.
+
+COCO-pretrained weights provide model initialization. The datasets above supply
+all training and evaluation data. Detection accuracy is measured on the
+human-labeled MIO-TCD test set, and LTA results use teacher-generated labels.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth]{detection_examples.png}
+  \caption{Examples from the detection datasets. (a) LTA daytime and (b) LTA
+  nighttime frames with joint-model detections; (c) a MIO-TCD test image with
+  human labels; (d) the same image with joint-model detections. Box colors
+  denote vehicle classes; titles report detected or labeled counts.}
+  \label{fig:detection-examples}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{pemsd8_series.png}
+  \caption{PEMSD8 traffic flow for sensor~0. (a) First seven days of the
+  five-minute series; (b) mean flow by time of day over the full collection.
+  The daily cycle motivates the time-of-day input used in the unified setting.}
+  \label{fig:pemsd8-series}
+\end{figure}
+
+\subsection{Data Domains}\label{sec:setup-domains}
+
+The prototype draws on two data sources. LTA images provide camera views and
+per-frame vehicle counts. PEMSD8 provides calibrated flow, occupancy and speed
+series for a road network. Each source supports one module: imagery for
+recognition and calibrated series for forecasting. An end-to-end deployment
+requires both at the same locations, aligned in time;
+Section~\ref{sec:method-integration} defines this interface. The workbench presents
+the two source-labeled views.
+
+\subsection{Evaluation Protocol and Metrics}\label{sec:setup-metrics}
+
+Detection is scored with COCO-style mAP \parencite{lin2014coco} at IoU~0.5 and
+0.5:0.95, per-class AP, precision/recall at confidence~0.25, and mean absolute
+counting error. Confidence intervals come from 2,000 bootstrap resamples of
+scene groups; paired differences reuse the same resamples. This interval covers
+scene sampling only, because each detector configuration was trained once.
+
+Forecasting uses masked MAE, RMSE and MAPE, averaged over the 12 output steps,
+with 15/30/60-minute breakdowns at output steps 3, 6 and 12. MAE is measured in
+vehicles per five-minute interval. Masked metrics ignore zero ground truth, with
+a threshold of $10^{-4}$. The scaler is a standard scaler fitted on the training
+input windows. All models use batch size 64, at most 100 epochs, early stopping
+with patience 30, and checkpoint selection by validation loss; optimizer,
+learning rate and schedule follow each model's LibCity default. Runs used
+PyTorch on Apple MPS with LibCity commit \texttt{5a6391d}. Seeds control
+initialization, shuffling and dropout, while data splits and test windows are
+fixed. Forecast intervals are paired $t$-intervals over seeds, not bootstrap
+intervals; the five-seed results are reported separately.

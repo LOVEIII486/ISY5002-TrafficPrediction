@@ -1,0 +1,96 @@
+\section{Discussion}\label{sec:discussion}
+
+\subsection{Detection Performance}\label{sec:discussion-detection}
+
+On MIO-TCD, where human labels are available, fine-tuning yields a substantial
+improvement on the evaluated dataset: mAP@0.5 rises from 0.430 to 0.720 and the
+gain is stable across scene groups. On the LTA images the reference is the
+YOLO26x teacher, and the joint model reaches 0.638 at the batch-inference
+resolution, close to the pretrained model's 0.660 and well above MIO-only
+training at 0.201. Joint training improves agreement on the Singapore validation
+set while retaining the accuracy gained from MIO-TCD. The human-labeled MIO-TCD
+test set provides the accuracy benchmark, and the LTA figures measure
+cross-domain agreement with the teacher.
+
+\subsection{Forecasting Performance}\label{sec:discussion-forecasting}
+
+The forecasting module was selected through the common-protocol comparison.
+GWNET is the best-performing model under the evaluated setting. Across five
+paired seeds, no clear difference was established between MultiHeadSTGCN and
+MTGNN or AGCRN, and the limited number of seeds does not support an equivalence
+claim. The backbone-matched configuration lowers MAE relative to STGCN by about
+14.8\% in the staged ablation and by 14.9\% in the default-configuration
+benchmark, but these comparisons also change inputs, loss and training strategy;
+they should not be read as an isolated architectural effect. Under both native
+and unified inputs, GWNET retains the lowest MAE in this benchmark.
+
+\subsection{Module Integration}\label{sec:discussion-integration}
+
+The detection and forecasting modules are part of one prototype and operate on
+different data domains. The detection module consumes camera images; the
+forecasting module consumes road-network time series. The workbench reads both
+sets of outputs and labels their sources, so a user can inspect the monitoring
+view and the forecast view with the corresponding data source identified. The
+separation follows the available data coverage; both modules remain part of the
+same prototype. Section~\ref{sec:method-integration} defines the interface for a
+connected system, and Section~\ref{sec:discussion-roadmap} discusses the
+implications of moving from the prototype to that system.
+
+\subsection{Implications for Future Integration}\label{sec:discussion-roadmap}
+
+Section~\ref{sec:method-integration} defines the data interface; the main
+implication is that integration is a measurement problem before it is a modeling
+problem. Camera counts must be calibrated against a trusted volume source and
+aggregated to a fixed interval, because a detector count per still image is not a
+flow series. The same locations also need time-aligned flow, and ideally
+occupancy and speed, over weeks or months. Where the existing view is too distant
+or poorly lit, close-range cameras or dedicated sensors are the practical way to
+obtain those measurements.
+
+A second implication concerns model transfer. A forecasting model trained on
+PEMSD8 learns California sensor dynamics; applying it to a Singapore series
+would require retraining and a new evaluation on the local split. Detection
+counts could enter as an exogenous variable, but only after calibration and
+timestamp alignment. These steps define the work that remains before the
+workbench can present one local monitoring-and-forecasting workflow rather than
+two source-labeled views.
+
+\subsection{Limitations and Scope}\label{sec:discussion-limitations}
+
+The reported system is a time-bounded prototype and pipeline design. It
+demonstrates the processing chain and evaluation protocol. An operational
+LTA-to-Singapore system would require calibrated sensing and longer data
+collection.
+
+\begin{itemize}
+  \item LTA results use the YOLO26x pseudo-labels as reference, so they measure
+        agreement with the teacher, and the student inherits the teacher's
+        missed motorcycles and false positives. Human-labeled MIO-TCD provides
+        the accuracy benchmark.
+  \item Nighttime LTA frames are difficult to annotate even for humans:
+        vehicles are small, poorly lit and often blurred. Teacher labels and
+        human labels collected at night are the least reliable reference.
+  \item LTA agreement depends on inference resolution: the joint model leads at
+        960 pixels and the pretrained model at 1280 pixels.
+  \item Scene groups provide a content-based proxy for camera identity, so the
+        MIO-TCD test set can retain residual same-camera overlap. In an audit of
+        40 test images, each paired with its most similar training image, a
+        preliminary visual review found 9 same-camera pairs. The test score
+        therefore describes a mix of seen and unseen cameras, not generalization
+        to new cameras.
+  \item MIO-TCD is evaluated on a filtered four-class subset with a
+        project-defined class mapping.
+  \item The workbench risk ranking is a threshold-based indicator defined on
+        predicted speed. It supports comparative inspection but has not been
+        validated against an independent congestion label.
+  \item The LTA images are still images at ten-minute intervals. They support
+        vehicle counts per frame but not continuous passage counts at a point.
+        A PEMSD8-style flow series would require continuous video, tracking,
+        lane or region calibration, and validation against a loop or radar
+        sensor.
+  \item Full local integration requires additional IoT measurements (loop
+        detectors, radar, LiDAR or traffic counters) at the camera locations to
+        provide calibrated flow, occupancy and speed. Close-range road cameras
+        are an alternative when the existing camera geometry or lighting is
+        unfavorable.
+\end{itemize}

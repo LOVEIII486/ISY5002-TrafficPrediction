@@ -1,0 +1,32 @@
+\section{Conclusion}\label{sec:conclusion}
+
+This project developed a modular prototype for traffic monitoring and
+short-term forecasting, comprising a vehicle recognition module, a traffic
+forecasting module and a web-based workbench. The system evaluates visual
+recognition and sensor-based forecasting on their respective data domains while
+keeping the boundary between those domains explicit.
+
+For vehicle recognition, fine-tuning improved mAP@0.5 from 0.430 to 0.720 on the
+human-labeled MIO-TCD test subset. Joint training with target-domain
+pseudo-labels also improved agreement with the teacher model on the LTA
+validation set relative to MIO-TCD-only training. These findings show the value
+of traffic-specific adaptation; the LTA figures remain teacher agreement rather
+than accuracy against human labels, and nighttime frames are the least reliable
+part of that proxy.
+
+For traffic forecasting, eight models were evaluated on PEMSD8 under native and
+unified-input configurations. GWNET achieved the lowest MAE among the evaluated
+configurations, while MultiHeadSTGCN produced competitive results without a
+clearly established difference from MTGNN or AGCRN across five seeds. The staged
+ablation associated direct multi-step prediction and calendar features with
+substantial reductions in MAE relative to the reference STGCN configuration.
+Because input features, loss and training strategy also changed, these
+reductions cannot be attributed to architecture alone.
+
+The workbench presents the monitoring and forecasting outputs in one interface,
+with source labels, historical replay and a threshold-based risk indicator. The
+two modules currently operate on different data domains and do not constitute an
+end-to-end Singapore forecasting pipeline. Future integration requires
+calibrated, time-aligned local measurements, retraining on the local series and
+evaluation of the resulting workflow. Overall, the project establishes a modular
+implementation and an experimental basis for that next stage.

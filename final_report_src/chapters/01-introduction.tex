@@ -1,0 +1,92 @@
+\section{Introduction}\label{sec:intro}
+
+\subsection{Traffic Forecasting in Urban Mobility}\label{sec:intro-background}
+
+Road transport is a major mode of movement in many cities, and the demand
+placed on urban networks continues to grow with population and economic
+activity. Congestion imposes costs on travelers, freight operators and the
+environment, while the physical capacity of the road network is difficult to
+expand in built-up areas. Operators therefore rely on traffic management to use
+existing capacity efficiently. Short-term traffic forecasting is a core part of
+this task: it estimates flow, occupancy or speed over the next 15 to 60 minutes,
+giving signal controllers, route guidance systems, incident response teams and
+network planners time to act before congestion forms.
+
+Forecasting methods have developed alongside the sensing infrastructure that
+supplies them. Loop detectors, radar and probe vehicles provide regular time
+series at fixed locations, and early methods modeled each location
+independently. As sensor networks expanded, spatio-temporal graph neural
+networks became a prominent approach: they represent sensors as nodes in a graph
+and learn both the spatial correlation between neighboring locations and the
+temporal dynamics of the series \parencite{yu2018stgcn,wu2019gwnet}. Benchmarks such as LibCity
+provide common data splits and implementations, making systematic comparison
+possible \parencite{wang2021libcity,jiang2023libcity}.
+
+Camera networks add a complementary view. Fixed roadside cameras cover wide
+areas and record individual vehicles, and one-stage detectors can recover
+vehicle positions and classes from each frame \parencite{ultralytics2026yolo}.
+The resulting counts describe what is visible at the camera, while calibrated
+flow, occupancy and speed series describe the aggregate traffic state used by
+forecasting models. Combining the two views is a practical route toward
+monitoring systems that both observe and anticipate traffic.
+
+\subsection{Problem Statement and Project Scope}\label{sec:intro-objectives}
+
+Singapore operates a dense network of fixed roadside cameras that provide
+continuous visual coverage of its road network. The LTA collection used in this
+project contains 15,316 images from eight cameras over two weeks, sampled at
+ten-minute intervals. The images support vehicle recognition and manual
+monitoring. They do not include calibrated flow, occupancy or speed at the
+camera locations, and the ten-minute sampling interval gives a discontinuous
+view of passing traffic. A forecasting model, by contrast, requires a regular
+series of aggregate measurements. Public benchmarks provide such series, but for
+different road networks.
+
+The project addresses this mismatch by building a prototype with three
+components: a vehicle recognition module, a traffic forecasting module and the
+Traffic Monitoring and Forecasting Workbench. The detection module is trained on
+MIO-TCD and jointly fine-tuned on LTA images with teacher pseudo-labels. The forecasting module is trained and
+evaluated on PEMSD8 under a common protocol that compares eight models. The
+workbench presents the outputs of both modules and labels their data sources. The
+design keeps the two data domains explicit and defines the interface through
+which a calibrated local series would connect them.
+
+The project pursues three questions:
+
+\begin{itemize}
+  \item How well does a detector trained on MIO-TCD transfer to LTA images when
+        the target-domain reference is teacher-generated?
+  \item How do representative forecasting models compare on PEMSD8 under a
+        common protocol, and how does the custom model perform against them?
+  \item How can a workbench present both outputs while keeping their data sources
+        explicit?
+\end{itemize}
+
+The scope is limited to four vehicle classes in still images. Forecasting
+focuses on traffic flow, with occupancy and speed as secondary analyses. The
+project is a time-bounded prototype and pipeline design. It establishes the
+processing chain, evaluation protocol and interface. An operational Singapore
+forecasting system would additionally require calibrated sensing and longer
+data collection. Nighttime LTA frames are a particular constraint: low light and
+small vehicle scale make annotation difficult even for humans.
+
+\subsection{Contributions}\label{sec:intro-contributions}
+
+\begin{itemize}
+  \item An LTA image set of 15,316 frames from eight Singapore cameras over two
+        weeks, with a documented sampling and teacher pseudo-labeling pipeline.
+  \item A leakage-aware MIO-TCD evaluation protocol based on scene groups, and
+        a joint fine-tuning procedure that trains a COCO-pretrained YOLO26m on
+        MIO-TCD and LTA images with teacher pseudo-labels; the model is applied
+        to the full LTA collection.
+  \item A common-protocol benchmark of eight forecasting models on PEMSD8,
+        covering native and unified nine-channel inputs, with five-seed paired
+        checks for the top four models.
+  \item MultiHeadSTGCN, an STGCN-based model with direct multi-step output,
+        calendar inputs and a selectable spatial operator, examined in a staged
+        ablation and against the benchmark models.
+  \item A web workbench that integrates overview, camera monitoring and
+        forecast views, with historical replay, camera-reliability indicators
+        and a threshold-based risk ranking, together with an integration design
+        for a calibrated local series.
+\end{itemize}
