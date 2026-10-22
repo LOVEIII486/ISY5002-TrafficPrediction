@@ -1,175 +1,216 @@
 <!doctype html>
-<html lang="zh-CN" data-bs-theme="light">
+<html lang="en" data-bs-theme="light">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>交通监控与预测系统</title>
+    <title>Traffic Monitoring and Forecasting Workbench</title>
+    <script>
+      /* 存过中文偏好时先藏住首屏，否则会闪一帧英文；console.js 应用完文案后移除。 */
+      try {
+        if ((localStorage.getItem("traffic-console.lang") || "").toLowerCase().startsWith("zh")) {
+          document.documentElement.classList.add("lang-booting");
+          setTimeout(function () {
+            document.documentElement.classList.remove("lang-booting");
+          }, 2500);
+        }
+      } catch (_) {}
+    </script>
+    <noscript><style>html.lang-booting body { visibility: visible !important; }</style></noscript>
     <link rel="stylesheet" href="/assets/vendor/tabler.min.css">
     <link rel="stylesheet" href="/assets/console.css">
   </head>
   <body>
-    <a class="skip-link" href="#main-content">跳至主内容</a>
+    <a class="skip-link" href="#main-content" data-i18n="app.skipLink">Skip to main content</a>
     <div class="workspace">
-      <aside class="app-sidebar navbar navbar-vertical" id="app-sidebar" aria-label="主导航">
+      <aside class="app-sidebar navbar navbar-vertical" id="app-sidebar" data-i18n-aria-label="app.navLabel" aria-label="Main navigation">
         <a class="app-brand" href="/#overview">
-          <span class="brand-mark">TC</span>
-          <span>Traffic Control<small>MONITORING &amp; FORECAST</small></span>
+          <span class="brand-mark">TW</span>
+          <span>Traffic Workbench<small>MONITORING &amp; FORECAST</small></span>
         </a>
-        <div class="nav-section">运行视图</div>
+        <div class="nav-section" data-i18n="app.navSection">WORKSPACE</div>
         <nav class="workspace-nav">
           <a class="nav-link active" href="/#overview" data-view="overview" aria-current="page">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
               <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
             </svg>
-            <span>总览</span>
+            <span data-i18n="nav.overview">Overview</span>
           </a>
           <a class="nav-link" href="/#monitoring" data-view="monitoring">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M2 8.5A15 15 0 0 0 22 8.5M2 15.5A15 15 0 0 1 22 15.5"/>
               <circle cx="12" cy="12" r="2.5"/>
             </svg>
-            <span>实时监控</span>
+            <span data-i18n="nav.monitoring">Camera monitoring</span>
           </a>
           <a class="nav-link" href="/#forecast" data-view="forecast">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M3 17l5-6 4 3 5-8 4 5"/><path d="M3 21h18"/>
             </svg>
-            <span>交通预测</span>
+            <span data-i18n="nav.forecast">Next 60 minutes</span>
           </a>
         </nav>
         <div class="sidebar-bottom">
-          <span class="status" data-state="on" id="sidebar-status">系统正常</span>
+          <span class="status" data-state="on" id="sidebar-status" data-i18n="health.ok">OK</span>
           <small id="sidebar-endpoint"></small>
-          <p>监测点位 8<br>预测节点 170</p>
         </div>
       </aside>
 
       <div class="workspace-content">
         <header class="app-header">
-          <button class="btn btn-icon btn-ghost-secondary" type="button" data-menu aria-label="展开导航" aria-controls="app-sidebar" aria-expanded="false">☰</button>
-          <span class="header-breadcrumb">TRAFFIC OPERATIONS <span>/</span> CONSOLE</span>
+          <button class="btn btn-icon btn-ghost-secondary" type="button" data-menu data-i18n-aria-label="header.menu" aria-label="Toggle navigation" aria-controls="app-sidebar" aria-expanded="false">☰</button>
+          <span class="header-breadcrumb"><span data-i18n="header.breadcrumb.ops">TRAFFIC MONITORING</span><span class="sep">/</span><span data-i18n="header.breadcrumb.console">WORKBENCH</span></span>
           <div class="header-actions">
-            <span class="status" id="dataset-badge" role="status">连接中</span>
-            <button class="btn btn-ghost-secondary" type="button" data-command="refreshActiveView">刷新</button>
+            <div class="lang-switch" role="group" data-i18n-aria-label="lang.group" aria-label="Language">
+              <button type="button" data-lang-choice="en" aria-pressed="true" lang="en">EN</button>
+              <button type="button" data-lang-choice="zh" aria-pressed="false" lang="zh-CN">中文</button>
+            </div>
+            <span class="status replay-badge" id="replay-badge" data-state="warn" data-i18n="header.replayBadge">HISTORICAL REPLAY</span>
+            <button class="btn btn-ghost-secondary" type="button" data-command="refreshActiveView" data-i18n="header.refresh">Refresh</button>
           </div>
         </header>
 
         <main id="main-content">
           <div class="page-heading">
             <div>
-              <span class="page-pretitle" id="page-pretitle">SYSTEM OVERVIEW</span>
-              <h1 id="page-title">总览</h1>
-              <p id="page-subtitle">路网监测与交通预测的整体运行状况。</p>
+              <span class="page-pretitle" id="page-pretitle">SITUATION</span>
+              <h1 id="page-title">System overview</h1>
             </div>
-            <button class="btn btn-outline-secondary" type="button" data-command="exportView">导出当前数据</button>
           </div>
 
           <section class="view active" id="view-overview">
-            <div class="stat-grid" id="overview-stats"></div>
             <p class="source-note" id="overview-sources"></p>
-            <div class="panel-grid cols-2-wide">
-              <section class="card panel">
-                <div class="card-head"><h4>监测点位</h4><span class="small" id="overview-map-note">—</span></div>
-                <div class="chart chart-tall" id="chart-overview-map"></div>
-              </section>
-              <section class="card panel">
-                <div class="card-head"><h4>模块状态</h4><span class="small">采集区间 2026-09-13 → 09-20</span></div>
-                <div class="service-list" id="service-list"></div>
-              </section>
-            </div>
+            <div id="overview-situation" class="situation-slot"></div>
+
             <section class="card panel">
               <div class="card-head">
-                <h4>各点位日内节律</h4>
-                <span class="small">当地时间 · 夜间低谷含检测失效（02–04 时近半帧无检出），不等于无车</span>
+                <h4 data-i18n="attention.title">Needs attention</h4>
+                <span class="small" id="overview-attention-note"></span>
               </div>
-              <div class="chart chart-wide" id="chart-overview-rhythm"></div>
+              <div class="attention-list" id="overview-attention"></div>
             </section>
+
+            <div class="health-grid" id="overview-health"></div>
+
             <section class="card panel">
-              <div class="card-head"><h4>各点位最近检出</h4><span class="small" id="latest-note">—</span></div>
-              <div class="shot-grid" id="shot-grid"></div>
+              <div class="card-head">
+                <h4 data-i18n="overview.card.cameras">Camera coverage</h4>
+                <span class="small" data-i18n="overview.cameraMapNote">Singapore · colour = feed health · size = completeness. This is not the forecast network.</span>
+              </div>
+              <div class="chart chart-map" id="chart-camera-map"></div>
             </section>
           </section>
 
           <section class="view" id="view-monitoring">
-            <div class="stat-grid" id="monitoring-stats"></div>
-            <div class="control-bar">
-              <label class="field">监测点位
-                <select class="form-select" id="camera-select" data-command="reloadMonitoring"></select>
-              </label>
-              <span class="control-note" id="camera-note">—</span>
-            </div>
             <p class="source-note" id="monitoring-sources"></p>
-            <div class="panel-grid cols-3">
+            <div id="monitoring-situation" class="situation-slot"></div>
+
+            <section class="card panel">
+              <div class="card-head"><h4 data-i18n="monitoring.picker">Camera feeds</h4></div>
+              <div class="camera-picker" id="camera-picker"></div>
+            </section>
+
+            <div class="panel-grid cols-2-wide">
               <section class="card panel">
-                <div class="card-head"><h4>点位分布</h4><span class="small" id="map-note">—</span></div>
-                <div class="chart chart-map" id="chart-camera-map"></div>
-              </section>
-              <section class="card panel">
-                <div class="card-head"><h4>检测画面</h4><span class="small" id="frame-note">—</span></div>
-                <div class="camera-frame" id="camera-frame">
-                  <img id="frame-image" alt="交通相机画面">
-                  <svg id="frame-overlay" viewBox="0 0 1920 1080" aria-hidden="true"></svg>
-                  <span class="empty-frame" id="frame-empty">尚无检测结果</span>
+                <div class="card-head">
+                  <h4 data-i18n="monitoring.frame">Detection frame</h4>
+                  <span class="small" id="frame-note">—</span>
                 </div>
+                <div class="camera-frame" id="camera-frame">
+                  <img id="frame-image" data-i18n-alt="monitoring.frameAlt" alt="Traffic camera frame">
+                  <svg id="frame-overlay" viewBox="0 0 1920 1080" aria-hidden="true"></svg>
+                  <span class="empty-frame" id="frame-empty" data-i18n="monitoring.emptyFrame">No detections yet</span>
+                </div>
+                <p class="zero-note" id="zero-frame-note" hidden></p>
                 <div class="frame-legend" id="frame-legend"></div>
-                <input class="form-range" type="range" id="frame-range" min="0" max="0" value="0"
-                       aria-label="选择检测画面">
+                <div class="frame-controls">
+                  <label class="field">
+                    <span data-i18n="monitoring.frameTime">Time (SGT)</span>
+                    <input class="form-control" type="datetime-local" id="frame-time" step="300">
+                  </label>
+                  <input class="form-range" type="range" id="frame-range" min="0" max="0" value="0"
+                         data-i18n-aria-label="monitoring.frameRange" aria-label="Select detection frame">
+                </div>
               </section>
+
               <section class="card panel">
-                <div class="card-head"><h4>分车型计数</h4><span class="small" id="series-note">—</span></div>
-                <div class="chart chart-map" id="chart-camera-classes"></div>
+                <div class="card-head"><h4 data-i18n="monitoring.reliability">Reliability</h4><span class="small" id="reliability-note"></span></div>
+                <dl class="health-metrics" id="monitoring-reliability"></dl>
               </section>
             </div>
+
+            <section class="card panel">
+              <div class="card-head">
+                <h4 data-i18n="monitoring.timeline">Counts by vehicle class</h4>
+                <span class="small" id="timeline-note">—</span>
+              </div>
+              <div class="chart chart-wide" id="chart-camera-classes"></div>
+            </section>
           </section>
 
           <section class="view" id="view-forecast">
-            <div class="control-bar">
-              <label class="field field-wide">监测点
-                <select class="form-select" id="node-select"></select>
+            <p class="source-note" id="forecast-sources"></p>
+            <div class="control-bar replay-control">
+              <label class="field field-wide" for="replay-range">
+                <span data-i18n="forecast.replay">Replay time</span>
+                <input class="form-range" type="range" id="replay-range" min="12" max="3566" value="3566" step="1">
               </label>
-              <label class="field">观测指标
-                <select class="form-select" id="target-select"></select>
-              </label>
-              <button class="btn btn-primary" type="button" data-command="reloadForecast">应用</button>
-              <span class="control-note" id="forecast-note">—</span>
+              <span class="control-note replay-label" id="replay-label">—</span>
+              <button class="btn btn-ghost-secondary" type="button" data-command="replayBack" data-i18n="forecast.stepBack">−5 min</button>
+              <button class="btn btn-ghost-secondary" type="button" data-command="replayForward" data-i18n="forecast.stepForward">+5 min</button>
+              <button class="btn btn-outline-secondary" type="button" data-command="replayLatest" data-i18n="forecast.latest">Latest</button>
+              <div class="segmented" id="horizon-group" role="group" data-i18n-aria-label="forecast.horizon" aria-label="Horizon">
+                <button type="button" data-horizon="15">+15</button>
+                <button type="button" data-horizon="30">+30</button>
+                <button type="button" data-horizon="60" aria-pressed="true">+60</button>
+              </div>
             </div>
-            <div class="source-note" id="forecast-sources"></div>
-            <div class="stat-grid" id="forecast-stats"></div>
-            <div class="panel-grid cols-2">
+
+            <div id="forecast-situation" class="situation-slot"></div>
+
+            <div class="panel-grid forecast-main">
               <section class="card panel">
                 <div class="card-head">
-                  <h4>路网当前负荷</h4>
-                  <span class="small">由站间里程还原的近似平面布局（非地理坐标）· 颜色越深越繁忙 · 黑圈为选中监测点</span>
+                  <h4 data-i18n="forecast.map.title">Predicted severity</h4>
+                  <div class="card-tools">
+                    <span class="small" data-i18n="forecast.map.hint">Scroll to zoom · drag to pan · double-click to reset</span>
+                    <button class="btn btn-ghost-secondary btn-sm" type="button" data-command="resetMap" data-i18n="forecast.map.reset">Reset view</button>
+                  </div>
                 </div>
-                <div class="chart chart-tall" id="chart-graph"></div>
+                <div class="chart chart-network" id="chart-severity-map"></div>
+                <p class="caveat" data-i18n="forecast.map.note">PEMSD8 has no GPS coordinates; this layout is reconstructed from inter-station distances. Not geographic.</p>
               </section>
+
               <section class="card panel">
                 <div class="card-head">
-                  <h4 id="curve-title">该监测点的预测</h4>
+                  <h4 id="curve-title">Detector 42</h4>
                   <span class="small" id="curve-note">—</span>
                 </div>
-                <div class="chart chart-tall" id="chart-curve"></div>
+                <div class="chart chart-tall" id="chart-risk-curve"></div>
+                <p class="verdict" id="curve-verdict"></p>
+                <p class="caveat" id="band-note" data-i18n="forecast.detail.bandNote">Shaded band = 10th–90th percentile of this detector's forecast errors on the test period. A typical error range, not a formal prediction interval.</p>
               </section>
             </div>
+
             <section class="card panel">
               <div class="card-head">
-                <h4>预测准确度</h4>
-                <span class="small">平均绝对百分比误差 · 越低越好</span>
+                <h4 data-i18n="forecast.table.title">Risk ranking</h4>
+                <span class="small" id="risk-table-note"></span>
               </div>
-              <div class="chart chart-wide" id="chart-accuracy"></div>
+              <div id="risk-table"></div>
             </section>
           </section>
         </main>
 
         <footer class="workspace-footer">
-          <span>交通监控与预测系统</span>
-          <span>Powered by Tabler</span>
+          <span data-i18n="app.footer">Traffic Monitoring and Forecasting Workbench</span>
+          <span data-i18n="app.poweredBy">Powered by Tabler</span>
         </footer>
       </div>
     </div>
     <div class="console-toast" id="toast" hidden></div>
     <script src="/assets/vendor/plotly.min.js"></script>
+    <script src="/assets/i18n.js"></script>
     <script src="/assets/console.js"></script>
   </body>
 </html>

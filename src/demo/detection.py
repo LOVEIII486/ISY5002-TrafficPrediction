@@ -27,6 +27,14 @@ VEHICLE_CLASSES = ("car", "motorcycle", "bus", "truck")
 # 展示用色，顺序与 console.js 里的 CLASS_COLOR 一致。
 TIMELINE_POINTS = 240
 
+# 相机可靠性阈值。零检出可能是真的空路，也可能是夜间漏检，所以只作为「别直接采信计数」
+# 的提示，不写成「检测失败」。
+ZERO_RATE_WATCH = 0.10
+ZERO_RATE_WARN = 0.20
+CONFIDENCE_WATCH = 0.55
+CONFIDENCE_WARN = 0.50
+COMPLETENESS_WARN = 0.92
+
 
 @lru_cache(maxsize=1)
 def run_info() -> dict[str, Any]:
@@ -103,6 +111,7 @@ def series(camera_id: str, points: int = TIMELINE_POINTS) -> dict[str, Any]:
     step = max(1, len(table) // points)
     sampled = table.iloc[::step].reset_index(drop=True)
     sampled["step"] = range(len(sampled))
+    sampled["zero"] = sampled[list(VEHICLE_CLASSES)].sum(axis=1) == 0
     return {
         "camera": camera_id,
         "class_names": list(VEHICLE_CLASSES),
@@ -110,7 +119,13 @@ def series(camera_id: str, points: int = TIMELINE_POINTS) -> dict[str, Any]:
         # 时间轴上的每个点都要能对应回一帧具体画面，前端才能点着看。
         "images": [str(value) for value in sampled["image"]],
         "timestamps": [value.isoformat() for value in sampled["captured_at"]],
+        "zero": [bool(value) for value in sampled["zero"]],
         "totals": {name: int(table[name].sum()) for name in VEHICLE_CLASSES},
+        # 抽样点不一定落在最后一帧上；「最近一帧」按完整表取，别让页面显示成几分钟前。
+        "latest": {
+            "image": str(table.sort_values("captured_at")["image"].iloc[-1]),
+            "timestamp": table.sort_values("captured_at")["captured_at"].iloc[-1].isoformat(),
+        },
     }
 
 
@@ -170,6 +185,8 @@ def frame_detail(image: str) -> dict[str, Any]:
             }
             for item in rows.itertuples()
         ],
+        "mean_conf": round(float(rows["conf"].mean()), 3) if not rows.empty else None,
+        "zero": rows.empty,
     }
 
 
@@ -210,4 +227,91 @@ def coverage() -> dict[str, Any]:
         "imgsz": info.get("imgsz"),
         "confidence": info.get("confidence"),
         "model": info.get("model"),
+    }
+
+
+@lru_cache(maxsize=1)
+def reliability() -> dict[str, Any]:
+    """逐相机的可靠性：零检出率、完整度、置信度。
+
+    零检出可能是真的空路，也可能是夜间漏检，所以只用于提示「计数别直接采信」，
+    不写成「检测失败」。
+    """
+    camera_frame = cameras()
+    table = counts()
+    if table.empty or camera_frame.empty:
+        return {
+            "cameras": {},
+            "overall": {
+                "cameras": int(len(camera_frame)),
+                "reporting": 0,
+                "frames": 0,
+                "confidence": 0.0,
+                "zero_rate": 0.0,
+                "first": None,
+                "last": None,
+            },
+        }
+
+    table = table.assign(total=table[list(VEHICLE_CLASSES)].sum(axis=1))
+    table = table.assign(zero=table["total"] == 0)
+    grouped = table.groupby("camera_id").agg(
+        frames=("image", "count"),
+        zero_frames=("zero", "sum"),
+        mean_vehicles=("total", "mean"),
+        last=("captured_at", "max"),
+    )
+    confidences = detections().groupby("camera_id")["conf"].mean()
+    median_frames = float(grouped["frames"].median()) or 1.0
+
+    per_camera: dict[str, Any] = {}
+    for row in camera_frame.itertuples():
+        stats = grouped.loc[row.camera_id] if row.camera_id in grouped.index else None
+        frames = int(stats["frames"]) if stats is not None else 0
+        zero_rate = float(stats["zero_frames"]) / frames if frames else 0.0
+        confidence = (
+            float(confidences[row.camera_id]) if row.camera_id in confidences.index else None
+        )
+        completeness = min(1.0, frames / median_frames)
+        issues: list[str] = []
+        if zero_rate >= ZERO_RATE_WATCH:
+            issues.append("lowDetections")
+        if confidence is not None and confidence < CONFIDENCE_WATCH:
+            issues.append("lowConfidence")
+        if completeness < COMPLETENESS_WARN:
+            issues.append("missingFrames")
+        health = "warn" if (
+            zero_rate >= ZERO_RATE_WARN
+            or (confidence is not None and confidence < CONFIDENCE_WARN)
+            or completeness < COMPLETENESS_WARN
+            or frames == 0
+        ) else "watch" if (
+            zero_rate >= ZERO_RATE_WATCH
+            or (confidence is not None and confidence < CONFIDENCE_WATCH)
+        ) else "ok"
+        last = stats["last"] if stats is not None else None
+        if last is not None and pd.isna(last):
+            last = None
+        per_camera[row.camera_id] = {
+            "frames": frames,
+            "zero_rate": round(zero_rate, 3),
+            "mean_vehicles": round(float(stats["mean_vehicles"]), 2) if stats is not None else 0.0,
+            "confidence": None if confidence is None else round(confidence, 3),
+            "completeness": round(completeness, 3),
+            "last": last.isoformat() if last is not None else None,
+            "health": health,
+            "issues": issues,
+        }
+
+    return {
+        "cameras": per_camera,
+        "overall": {
+            "cameras": int(len(camera_frame)),
+            "reporting": int((grouped["frames"] > 0).sum()),
+            "frames": int(len(table)),
+            "confidence": round(float(detections()["conf"].mean()), 3),
+            "zero_rate": round(float(table["zero"].mean()), 3),
+            "first": table["captured_at"].min().isoformat(),
+            "last": table["captured_at"].max().isoformat(),
+        },
     }
