@@ -114,7 +114,7 @@
               <section class="card panel">
                 <div class="card-head">
                   <h4 data-i18n="monitoring.frame">Detection frame</h4>
-                  <span class="small" id="frame-note">—</span>
+                  <span class="frame-head-meta"><span id="frame-level"></span><span class="small" id="frame-note">—</span></span>
                 </div>
                 <div class="camera-frame" id="camera-frame">
                   <img id="frame-image" data-i18n-alt="monitoring.frameAlt" alt="Traffic camera frame">
@@ -138,6 +138,15 @@
                 <dl class="health-metrics" id="monitoring-reliability"></dl>
               </section>
             </div>
+
+            <section class="card panel" id="congestion-card" hidden>
+              <div class="card-head">
+                <h4 data-i18n="monitoring.congestion">Congestion by weekday and hour</h4>
+                <span class="small" id="congestion-note">—</span>
+              </div>
+              <div class="chart chart-heatmap" id="chart-congestion"></div>
+              <p class="source-note congestion-method" id="congestion-method"></p>
+            </section>
 
             <section class="card panel">
               <div class="card-head">

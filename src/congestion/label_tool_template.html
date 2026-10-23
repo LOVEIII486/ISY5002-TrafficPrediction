@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Congestion Labels</title>
+<style>
+  :root {
+    --bg: #15171c; --panel: #1e2128; --line: #2c3039; --text: #e9eaee; --muted: #9aa0ab;
+    --zone: #f59e0b; --free: #22a06b; --moderate: #d99a1e; --congested: #d6453d; --skip: #6b7280;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; }
+  header { display: flex; align-items: center; gap: 16px; padding: 10px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  header h1 { font-size: 16px; margin: 0; font-weight: 600; }
+  .prog { display: flex; gap: 14px; align-items: center; color: var(--muted); }
+  .bar { width: 140px; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 6px; }
+  .bar i { display: block; height: 100%; background: var(--text); width: 0; }
+  .spacer { flex: 1; }
+  button { font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  button:hover { border-color: #4a505c; }
+  button:disabled { opacity: .45; cursor: default; }
+  main { display: flex; gap: 16px; padding: 16px; height: calc(100% - 53px); }
+  .stage { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+  .frame { position: relative; display: inline-block; line-height: 0; }
+  .frame img { display: block; max-width: 100%; max-height: calc(100vh - 150px); border-radius: 4px; background: #000; }
+  .frame svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .caption { color: var(--muted); }
+  .caption b { color: var(--text); font-weight: 600; }
+  .side { width: 320px; flex: none; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .lvl { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px; margin-bottom: 8px; font-size: 15px; text-align: left; border-width: 2px; }
+  .lvl kbd { width: 26px; height: 26px; display: inline-grid; place-items: center; border-radius: 6px; font: 600 14px system-ui; color: #fff; }
+  .lvl span small { display: block; color: var(--muted); font-size: 12px; }
+  .lvl.free { border-color: var(--free); } .lvl.free kbd { background: var(--free); }
+  .lvl.moderate { border-color: var(--moderate); } .lvl.moderate kbd { background: var(--moderate); }
+  .lvl.congested { border-color: var(--congested); } .lvl.congested kbd { background: var(--congested); }
+  .row { display: flex; gap: 8px; }
+  .row button { flex: 1; }
+  .toggles { display: flex; gap: 8px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+  .toggles label { display: flex; gap: 4px; align-items: center; cursor: pointer; }
+  .guide { color: var(--muted); font-size: 13px; }
+  .guide p { margin: 0 0 6px; }
+  .guide b { color: var(--text); }
+  .counts { display: grid; grid-template-columns: auto repeat(4, 1fr); gap: 2px 8px; font-size: 13px; color: var(--muted); }
+  .counts b { color: var(--text); font-weight: 600; }
+  .banner { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; place-items: center; z-index: 5; }
+  .banner.on { display: grid; }
+  .banner .card { max-width: 440px; font-size: 15px; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #2d323c; padding: 8px 14px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.on { opacity: 1; }
+  .missing { color: var(--congested); max-width: 520px; text-align: center; line-height: 1.5; }
+  @media (max-width: 900px) {
+    main { flex-direction: column; height: auto; }
+    .side { width: 100%; }
+    .frame img { max-height: 60vh; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Congestion labels</h1>
+  <div class="prog">
+    <span>Practice <b id="pP">0/0</b><span class="bar"><i id="bP"></i></span></span>
+    <span>Test <b id="pT">0/0</b><span class="bar"><i id="bT"></i></span></span>
+  </div>
+  <div class="spacer"></div>
+  <button id="btnImport">Import</button>
+  <button id="btnExport">Export labels</button>
+  <input type="file" id="fileImport" accept=".json" hidden>
+</header>
+<main>
+  <section class="stage" id="stage">
+    <div class="frame" id="frame">
+      <img id="img" alt="">
+      <svg id="ov" viewBox="0 0 1 1" preserveAspectRatio="none"></svg>
+    </div>
+    <div class="caption" id="cap"></div>
+  </section>
+  <aside class="side">
+    <div class="card">
+      <button class="lvl free" data-level="free"><kbd>1</kbd><span>Free-flowing<small>Few vehicles or wide gaps</small></span></button>
+      <button class="lvl moderate" data-level="moderate"><kbd>2</kbd><span>Moderate<small>Many vehicles, short gaps, no queue</small></span></button>
+      <button class="lvl congested" data-level="congested"><kbd>3</kbd><span>Congested<small>Vehicles queue bumper to bumper</small></span></button>
+      <div class="row">
+        <button id="btnSkip" title="Key 0 or S">0 · Can't judge</button>
+        <button id="btnUndo" title="Backspace or Z">⌫ Undo</button>
+      </div>
+    </div>
+    <div class="card toggles">
+      <label><input type="checkbox" id="tOutline" checked> Outline (H)</label>
+      <label><input type="checkbox" id="tDim" checked> Dim outside (D)</label>
+    </div>
+    <div class="card guide">
+      <p><b>Judge only the road inside the orange outline.</b> When the outlines cover two roads or directions that differ, label the more congested one.</p>
+      <p><b>Free-flowing</b>: vehicles could move freely. <b>Moderate</b>: busy, gaps of about a car length or less, but no queue. <b>Congested</b>: a queue of vehicles nose to tail over much of the outline.</p>
+      <p>At night, judge from the headlights and tail lights. Skip only when the road inside the outline cannot be seen (heavy rain, fog, glare); a replacement from the same camera and time band appears.</p>
+      <p>The date and time are hidden on purpose, so that the label comes from the picture alone.</p>
+    </div>
+    <div class="card"><div class="counts" id="counts"></div></div>
+  </aside>
+</main>
+<div class="banner" id="banner"><div class="card">
+  <p><b>Practice set done.</b> Export the labels and send the file. You can carry on with the test set now or later; progress is kept in this browser.</p>
+  <div class="row"><button id="bExport">Export labels</button><button id="bGo">Continue to the test set</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+<script>
+const DATA = /*__DATA__*/null;
+const KEY = "congestion_labels_v1_" + DATA.task_hash;
+const LEVELS = ["free", "moderate", "congested"];
+const SLOTS = DATA.slots;
+const $ = id => document.getElementById(id);
+
+function fresh() {
+  const next = {};
+  for (const s of SLOTS) next[s.pool] = Math.max(next[s.pool] || 0, s.first + 1);
+  return { assign: {}, next, labels: {}, skipped: [], history: [], view: { outline: true, dim: true, practiceAck: false } };
+}
+function load() { try { const s = JSON.parse(localStorage.getItem(KEY)); return s && s.labels ? s : null; } catch (e) { return null; } }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast("Could not save progress in this browser; export regularly"); } }
+let S = load() || fresh();
+
+const candIndex = s => (s.id in S.assign ? S.assign[s.id] : s.first);
+const cand = s => { const i = candIndex(s); return i >= 0 ? DATA.pools[s.pool][i] : null; };
+const open = s => !(s.id in S.labels) && candIndex(s) >= 0;
+const current = () => SLOTS.find(open) || null;
+
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("on"), 2200); }
+
+let loading = false;  // labels wait until the new picture is on screen
+function act(fn) {
+  const s = current(); if (!s) return;
+  if (loading) { toast("The picture is still loading"); return; }
+  fn(s); save(); render();
+}
+function label(level) {
+  act(s => { S.labels[s.id] = { level, at: new Date().toISOString() }; S.history.push({ t: "label", slot: s.id }); });
+}
+function skip() {
+  act(s => {
+    const prev = candIndex(s), pool = DATA.pools[s.pool], nxt = S.next[s.pool];
+    S.skipped.push({ slot: s.id, image: pool[prev].image, at: new Date().toISOString() });
+    if (nxt < pool.length) { S.assign[s.id] = nxt; S.next[s.pool] = nxt + 1; S.history.push({ t: "skip", slot: s.id, prev, took: true }); }
+    else { S.assign[s.id] = -1; S.history.push({ t: "skip", slot: s.id, prev, took: false }); toast("No spare frame left for this camera and time band; the slot stays empty"); }
+  });
+}
+function undo() {
+  const h = S.history.pop();
+  if (!h) { toast("Nothing to undo"); return; }
+  if (h.t === "label") delete S.labels[h.slot];
+  else { S.assign[h.slot] = h.prev; if (h.took) S.next[SLOTS[h.slot].pool] -= 1; S.skipped.pop(); }
+  save(); render(); toast("Undone");
+}
+
+function overlay(cam) {
+  const zones = DATA.cameras[cam].zones;
+  const pts = z => z.map(p => p.join(",")).join(" ");
+  const holes = zones.map(z => "M" + z.map(p => p.join(",")).join("L") + "Z").join("");
+  let svg = "";
+  if (S.view.dim) svg += `<path d="M0,0H1V1H0Z${holes}" fill="rgba(0,0,0,.45)" fill-rule="evenodd"/>`;
+  if (S.view.outline) svg += zones.map(z => `<polygon points="${pts(z)}" fill="none" stroke="#f59e0b" stroke-width="2.5" vector-effect="non-scaling-stroke"/>`).join("");
+  $("ov").innerHTML = svg;
+}
+
+function counts() {
+  const c = { practice: {}, test: {} };
+  for (const sp of ["practice", "test"]) { for (const l of LEVELS) c[sp][l] = 0; c[sp].skip = 0; c[sp].done = 0; c[sp].total = 0; }
+  for (const s of SLOTS) { c[s.split].total++; if (s.id in S.labels) { c[s.split][S.labels[s.id].level]++; c[s.split].done++; } }
+  for (const k of S.skipped) c[SLOTS[k.slot].split].skip++;
+  return c;
+}
+
+function render() {
+  const c = counts();
+  $("pP").textContent = `${c.practice.done}/${c.practice.total}`; $("bP").style.width = (100 * c.practice.done / c.practice.total) + "%";
+  $("pT").textContent = `${c.test.done}/${c.test.total}`; $("bT").style.width = (100 * c.test.done / c.test.total) + "%";
+  $("counts").innerHTML = `<span></span><span>Free</span><span>Mod.</span><span>Cong.</span><span>Skipped</span>` +
+    ["practice", "test"].map(sp => `<span>${sp[0].toUpperCase() + sp.slice(1)}</span>` +
+      [...LEVELS, "skip"].map(l => `<b>${c[sp][l]}</b>`).join("")).join("");
+  $("btnUndo").disabled = !S.history.length;
+  const s = current();
+  if (!s) {
+    $("frame").style.display = "none";
+    $("cap").innerHTML = `<b>All done.</b> Export the labels and send the file.`;
+    document.querySelectorAll(".lvl, #btnSkip").forEach(b => b.disabled = true);
+    return;
+  }
+  document.querySelectorAll(".lvl, #btnSkip").forEach(b => b.disabled = false);
+  const showBanner = s.split === "test" && !S.view.practiceAck;
+  $("banner").classList.toggle("on", showBanner);
+  const k = cand(s), cam = DATA.cameras[s.camera];
+  $("frame").style.display = "";
+  const img = $("img");
+  if (img.dataset.path !== k.path) { img.dataset.path = k.path; loading = true; img.style.visibility = "hidden"; img.src = k.path; }
+  overlay(s.camera);
+  const nInSplit = SLOTS.filter(x => x.split === s.split && x.id <= s.id).length;
+  $("cap").innerHTML = `<b>${s.camera}</b> · ${cam.name} &nbsp;·&nbsp; ${s.split} #${nInSplit}`;
+  const nxt = SLOTS.find(x => x.id > s.id && open(x)); if (nxt) new Image().src = cand(nxt).path;  // preload
+}
+
+$("img").addEventListener("load", () => { loading = false; $("img").style.visibility = ""; });
+$("img").addEventListener("error", () => {
+  $("cap").innerHTML = `<span class="missing">Image not found: ${$("img").dataset.path}<br>Keep this page in results/congestion/labeling inside the repository, next to datasets/lta.</span>`;
+});
+
+function exportLabels() {
+  const iso = new Date().toISOString();
+  const items = SLOTS.filter(s => s.id in S.labels).map(s => ({ slot: s.id, split: s.split, camera: s.camera, stratum: s.stratum,
+    image: cand(s).image, label: S.labels[s.id].level, labeled_at: S.labels[s.id].at }));
+  const skipped = S.skipped.map(k => { const s = SLOTS[k.slot]; return { slot: k.slot, split: s.split, camera: s.camera, stratum: s.stratum, image: k.image, at: k.at }; });
+  const out = { format: "congestion_labels/v1", task_hash: DATA.task_hash, exported_at: iso, counts: counts(), items, skipped, state: S };
+  const blob = new Blob([JSON.stringify(out, null, 1)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "congestion_labels.json";
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast(`Exported ${items.length} labels and ${skipped.length} skips`);
+}
+
+document.querySelectorAll(".lvl").forEach(b => b.onclick = () => label(b.dataset.level));
+$("btnSkip").onclick = skip;
+$("btnUndo").onclick = undo;
+$("btnExport").onclick = exportLabels;
+$("bExport").onclick = exportLabels;
+$("bGo").onclick = () => { S.view.practiceAck = true; save(); render(); };
+$("tOutline").onchange = e => { S.view.outline = e.target.checked; save(); render(); };
+$("tDim").onchange = e => { S.view.dim = e.target.checked; save(); render(); };
+$("btnImport").onclick = () => $("fileImport").click();
+$("fileImport").onchange = async ev => {
+  const f = ev.target.files[0]; if (!f) return;
+  try {
+    const j = JSON.parse(await f.text());
+    if (j.task_hash !== DATA.task_hash) throw new Error("the file belongs to a different task set");
+    if (!j.state || !j.state.labels) throw new Error("no progress in the file");
+    S = j.state; save(); render(); toast(`Imported ${Object.keys(S.labels).length} labels`);
+  } catch (e) { toast("Import failed: " + e.message); }
+  ev.target.value = "";
+};
+window.addEventListener("keydown", ev => {
+  if (ev.target.tagName === "INPUT" && ev.target.type !== "checkbox") return;
+  if ($("banner").classList.contains("on")) { if (ev.key === "Enter") $("bGo").click(); return; }
+  const k = ev.key.toLowerCase();
+  if (k === "1" || k === "2" || k === "3") label(LEVELS[+k - 1]);
+  else if (k === "0" || k === "s") skip();
+  else if (k === "backspace" || k === "z") { ev.preventDefault(); undo(); }
+  else if (k === "h") { $("tOutline").click(); }
+  else if (k === "d") { $("tDim").click(); }
+});
+$("tOutline").checked = S.view.outline; $("tDim").checked = S.view.dim;
+render();
+</script>
+</body>
+</html>

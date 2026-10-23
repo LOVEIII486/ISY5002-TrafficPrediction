@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Camera Calibrator</title>
+<style>
+:root{
+  --bg:#f4f5f7; --panel:#ffffff; --ink:#1d2128; --muted:#69707d; --line:#e2e5ea;
+  --accent:#2b59c3; --accent-ink:#ffffff; --stage:#101318;
+  --keep:#ff2bc8; --road:#22c55e; --zone:#f59e0b; --excl:#ef4444; --exclpt:#20d3ff; --outpt:#d7dbe0;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{display:flex;align-items:center;gap:16px;padding:12px 20px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{font-size:18px;margin:0;font-weight:700}
+header .src{color:var(--muted);font-size:12px;flex:1;min-width:240px}
+button,select,input{font:inherit}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:#b8bec8}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.on{background:#1d2128;border-color:#1d2128;color:#fff}
+.btn.small{padding:2px 8px;font-size:12px}
+.btn.danger{color:#c62828}
+.tabs{display:flex;gap:6px;padding:10px 20px 0;flex-wrap:wrap}
+.tab{border:1px solid var(--line);border-bottom:none;background:#eceef2;padding:7px 12px;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px}
+.tab b{font-size:14px;margin-right:4px}
+.tab.on{background:var(--panel);font-weight:600}
+.tab .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#c9ced6;margin-left:6px;vertical-align:middle}
+.tab .dot.done{background:var(--road)}
+.tab .dot.draft{background:var(--zone)}
+.draftbar{display:flex;gap:6px;align-items:center;background:#fff7e6;border:1px solid #f5d18a;border-radius:6px;padding:6px 8px;font-size:12px;margin-bottom:8px}
+main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;padding:0 20px 20px}
+.left{background:var(--panel);border:1px solid var(--line);border-radius:0 8px 8px 8px;padding:12px;position:sticky;top:8px;align-self:start}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.toolbar .grp{display:flex;gap:4px;align-items:center;padding-right:10px;border-right:1px solid var(--line)}
+.toolbar .grp:last-child{border-right:none}
+.toolbar label{color:var(--muted);font-size:12px;margin-right:2px}
+.hint{font-size:12px;color:var(--muted);margin:2px 0 8px;min-height:18px}
+.stage{position:relative;width:100%;aspect-ratio:16/9;background:var(--stage);border-radius:6px;overflow:hidden;user-select:none}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%}
+.stage .zoom{position:absolute;right:8px;bottom:8px;display:flex;gap:4px}
+.stage .zoom .btn{background:rgba(255,255,255,.9);padding:2px 8px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+aside{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.card h2{font-size:14px;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+.card h2 small{font-weight:400;color:var(--muted);font-size:12px}
+.stat{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:13px}
+.stat .v{text-align:right;font-variant-numeric:tabular-nums}
+.stat .sep{grid-column:1/-1;border-top:1px dashed var(--line);margin:4px 0}
+.muted{color:var(--muted)}
+.list{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto}
+.item{border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12px}
+.item.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.item .row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.item input[type=text]{flex:1;min-width:100px;border:1px solid var(--line);border-radius:4px;padding:2px 6px;font-size:12px}
+.item select{border:1px solid var(--line);border-radius:4px;font-size:12px;padding:1px 2px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:11px;color:#fff}
+.tag.road{background:var(--road)} .tag.zone{background:var(--zone)} .tag.excl{background:var(--excl)}
+.steps{margin:0;padding-left:18px;font-size:12px;color:var(--muted)}
+.steps li{margin:2px 0}
+kbd{font:11px ui-monospace,Consolas,monospace;background:#eef0f3;border:1px solid var(--line);border-radius:3px;padding:0 4px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1d2128;color:#fff;padding:8px 14px;border-radius:6px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.show{opacity:.95}
+#loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#cfd3da;font-size:13px}
+@media (max-width:1000px){main{grid-template-columns:1fr}.left{position:static}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Camera Calibrator</h1>
+  <div class="src" id="src"></div>
+  <button class="btn" id="btnImport">Import config</button>
+  <button class="btn primary" id="btnExport">Export config</button>
+  <input type="file" id="fileImport" accept=".json,application/json" hidden>
+</header>
+<div class="tabs" id="tabs"></div>
+<main>
+  <section class="left">
+    <div class="toolbar">
+      <div class="grp" id="modeGrp">
+        <label>Tool</label>
+        <button class="btn on" data-mode="edit">Select / edit</button>
+        <button class="btn" data-mode="road">Draw road region</button>
+        <button class="btn" data-mode="zone">Draw detection zone</button>
+        <button class="btn" data-mode="excl">Draw exclusion</button>
+      </div>
+      <div class="grp">
+        <label>Background</label>
+        <button class="btn on" data-ref="day">Day</button>
+        <button class="btn" data-ref="night">Night</button>
+      </div>
+      <div class="grp">
+        <label>Points</label>
+        <button class="btn on" data-period="all">All</button>
+        <button class="btn" data-period="day">Day</button>
+        <button class="btn" data-period="night">Night</button>
+      </div>
+      <div class="grp">
+        <label for="alpha">Opacity</label>
+        <input type="range" id="alpha" min="0.03" max="0.8" step="0.01" value="0.18" style="width:90px">
+        <label style="margin-left:6px"><input type="checkbox" id="showRemoved" checked> Show removed points</label>
+        <label style="margin-left:6px"><input type="checkbox" id="showCand" checked> Show candidates</label>
+      </div>
+    </div>
+    <div class="hint" id="hint"></div>
+    <div class="stage" id="stage">
+      <canvas id="base"></canvas>
+      <canvas id="overlay"></canvas>
+      <div id="loading">Loading…</div>
+      <div class="zoom">
+        <button class="btn small" id="zoomIn" title="Zoom in">+</button>
+        <button class="btn small" id="zoomOut" title="Zoom out">−</button>
+        <button class="btn small" id="zoomReset">Reset view</button>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--keep)"></i>Kept detection (box bottom-centre)</span>
+      <span><i style="background:var(--outpt)"></i>Outside road region, removed</span>
+      <span><i style="background:var(--exclpt)"></i>In exclusion set, removed</span>
+      <span><i style="border:2px solid var(--road)"></i>Road region</span>
+      <span><i style="border:2px solid var(--zone)"></i>Detection zone</span>
+      <span><i style="border:2px solid var(--excl)"></i>Exclusion</span>
+    </div>
+  </section>
+  <aside>
+    <div class="card">
+      <h2>How to use</h2>
+      <ol class="steps">
+        <li>The pink points are two weeks of detector output; each point is the bottom-centre of one box. Fixed false positives form a tight cluster in one place.</li>
+        <li>Each camera opens with a <b>suggested draft</b> (road region + detection zone). Drag the vertices to adjust, then click "Confirm". Tab dot: orange = draft to confirm, green = confirmed.</li>
+        <li><b>Road region</b>: include every road vehicles use (both directions, ramps); err on the wide side. Every box outside it is removed.</li>
+        <li><b>Exclusion set</b>: after the road region, box only the fixed false positives that remain <b>on the road</b> (road markings, gantries). Can be limited to day or night.</li>
+        <li><b>Detection zone</b>: a near section of one direction, covering all its lanes, long enough for 5–15 queuing vehicles. Used for congestion analysis.</li>
+        <li>When all 8 cameras are done, click "Export config" to save the JSON file.</li>
+      </ol>
+      <p class="muted" style="font-size:12px;margin:6px 0 0">Scroll to zoom; right-drag or hold <kbd>Space</kbd> to pan. <kbd>Ctrl</kbd>+<kbd>Z</kbd> to undo, <kbd>Delete</kbd> to remove the selected shape.</p>
+    </div>
+    <div class="card">
+      <h2>Effect <small id="camLabel"></small></h2>
+      <div class="stat" id="stats"></div>
+    </div>
+    <div class="card">
+      <h2>Shapes <small id="shapeCount"></small></h2>
+      <div class="list" id="shapes"></div>
+    </div>
+    <div class="card">
+      <h2>Detection zone options <small>hover to preview, pick one, then adjust</small></h2>
+      <div class="list" id="zopts"></div>
+    </div>
+    <div class="card">
+      <h2>Fixed false-positive candidates <small>positions where the same box recurs</small></h2>
+      <p class="muted" style="font-size:12px;margin:0 0 6px">Queues and vehicles stopped at red lights also recur, and those are real vehicles. Check the background: only add candidates on signs, lights or markings to the exclusion set.</p>
+      <div class="list" id="cands"></div>
+    </div>
+  </aside>
+</main>
+<div id="toast"></div>
+<script>
+"use strict";
+const DATA = /*__DATA__*/null;
+const STORE_KEY = "camera_calibrator_v1";
+const CAMS = Object.keys(DATA.cameras);
+const DAY0 = DATA.day_hours[0], DAY1 = DATA.day_hours[1];
+const isDayHour = h => h >= DAY0 && h < DAY1;
+
+// ---------- state ----------
+const state = { previewZones: null, cam: CAMS[0], mode: "edit", ref: "day", period: "all", alpha: 0.18,
+  showRemoved: true, showCand: true, sel: null, focusCand: null, cameras: {} };
+for (const c of CAMS) state.cameras[c] = { road: [], zone: [], exclude: [], seeded: false, draft: false };
+const view = { s: 1, ox: 0, oy: 0 };
+const pts = {};            // decoded points per camera
+const imgs = {};           // background images
+const undo = {};           // undo stack per camera
+let draft = null;          // shape being drawn
+let drag = null;           // item being dragged
+let spaceDown = false;
+
+try { const s = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+  if (s && s.cameras) for (const c of CAMS) if (s.cameras[c]) state.cameras[c] = normCam(s.cameras[c]);
+} catch (e) {}
+
+function normCam(c) {
+  return { road: (c.road || []).filter(p => p.length >= 3), zone: (c.zone || []).filter(p => p.length >= 3),
+    exclude: (c.exclude || []).map(e => ({ box: e.box, when: e.when || "all", rule: e.rule || "point", note: e.note || "" })),
+    seeded: c.seeded !== undefined ? !!c.seeded : ((c.road || []).length + (c.zone || []).length) > 0, draft: !!c.draft };
+}
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify({ cameras: state.cameras })); } catch (e) {} }
+
+// ---------- data decoding ----------
+async function gunzipB64(b64) {
+  const bin = Uint8Array.from(atob(b64), ch => ch.charCodeAt(0));
+  if (typeof DecompressionStream === "undefined") throw new Error("This browser is too old; please open the page in a recent Chrome or Edge");
+  const stream = new Blob([bin]).stream().pipeThrough(new DecompressionStream("gzip"));
+  return await new Response(stream).arrayBuffer();
+}
+async function loadCam(c) {
+  if (pts[c]) return pts[c];
+  const meta = DATA.cameras[c], n = meta.n_points;
+  const buf = await gunzipB64(meta.points);
+  const u16 = new Uint16Array(buf, 0, n * 5), u8 = new Uint8Array(buf, n * 10, n * 2);
+  const P = { n, nx: new Float32Array(n), ny: new Float32Array(n), w: new Float32Array(n), h: new Float32Array(n),
+    frame: u16.subarray(n * 4, n * 5), conf: u8.subarray(0, n), hour: new Uint8Array(n), cls: new Uint8Array(n),
+    status: new Int16Array(n), inZone: new Uint8Array(n) };
+  for (let i = 0; i < n; i++) {
+    P.nx[i] = Math.min(0.999, Math.max(0.001, u16[i] / 65535)); P.ny[i] = Math.min(0.999, Math.max(0.001, u16[n + i] / 65535));  // same as the Python side: pull points at the image border slightly inwards
+    P.w[i] = u16[2 * n + i] / 65535; P.h[i] = u16[3 * n + i] / 65535;
+    const f = u8[n + i]; P.cls[i] = f & 3; P.hour[i] = f >> 2;
+  }
+  const fh = Uint8Array.from(atob(meta.frame_hours), ch => ch.charCodeAt(0));
+  P.frameDay = Uint8Array.from(fh, h => isDayHour(h) ? 1 : 0);
+  pts[c] = P;
+  return P;
+}
+function loadImg(c, tag) {
+  const key = c + tag;
+  if (imgs[key]) return imgs[key];
+  const r = DATA.cameras[c].refs[tag] || DATA.cameras[c].refs.day || DATA.cameras[c].refs.night;
+  const im = new Image(); im.src = r.src; im.onload = () => drawBase();
+  return (imgs[key] = im);
+}
+
+// ---------- geometry ----------
+function pip(x, y, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function bbox(poly) { let a = 1, b = 1, c = 0, d = 0; for (const [x, y] of poly) { a = Math.min(a, x); b = Math.min(b, y); c = Math.max(c, x); d = Math.max(d, y); } return [a, b, c, d]; }
+function inAnyPoly(x, y, polys, boxes) { for (let k = 0; k < polys.length; k++) { const b = boxes[k]; if (x < b[0] || x > b[2] || y < b[1] || y > b[3]) continue; if (pip(x, y, polys[k])) return true; } return false; }
+function whenOk(when, hour) { return when === "all" || (when === "day") === isDayHour(hour); }
+function exclHit(e, P, i) {
+  const [a, b, c, d] = e.box, x = P.nx[i], y = P.ny[i];
+  if (e.rule === "box") { const hw = P.w[i] / 2; return x - hw >= a && x + hw <= c && y - P.h[i] >= b && y <= d; }
+  return x >= a && x <= c && y >= b && y <= d;
+}
+
+// ---------- filtering and statistics ----------
+let stats = null;
+function classify() {
+  const P = pts[state.cam]; if (!P) return;
+  const C = state.cameras[state.cam], meta = DATA.cameras[state.cam];
+  const roadB = C.road.map(bbox), zoneB = C.zone.map(bbox);
+  const exN = new Int32Array(C.exclude.length), exR = new Int32Array(C.exclude.length), exF = C.exclude.map(() => new Set());
+  let out = 0, ex = 0, keptDay = 0, keptNight = 0, allDay = 0, allNight = 0, zDay = 0, zNight = 0;
+  const exFrames = new Set();
+  for (let i = 0; i < P.n; i++) {
+    const day = isDayHour(P.hour[i]); day ? allDay++ : allNight++;
+    let s = 0;
+    if (C.road.length && !inAnyPoly(P.nx[i], P.ny[i], C.road, roadB)) { s = 1;
+      for (let k = 0; k < C.exclude.length; k++) if (whenOk(C.exclude[k].when, P.hour[i]) && exclHit(C.exclude[k], P, i)) { exR[k]++; break; } }
+    else for (let k = 0; k < C.exclude.length; k++) {
+      const e = C.exclude[k];
+      if (whenOk(e.when, P.hour[i]) && exclHit(e, P, i)) { s = 2 + k; exN[k]++; exF[k].add(P.frame[i]); exFrames.add(P.frame[i]); break; }
+    }
+    P.status[i] = s;
+    if (s === 1) out++; else if (s >= 2) ex++;
+    else { day ? keptDay++ : keptNight++;
+      const z = C.zone.length && inAnyPoly(P.nx[i], P.ny[i], C.zone, zoneB) ? 1 : 0; P.inZone[i] = z;
+      if (z) day ? zDay++ : zNight++; }
+  }
+  stats = { n: P.n, out, ex, exFrames: exFrames.size, kept: P.n - out - ex, exN, exR, exF: exF.map(s => s.size),
+    allDay, allNight, keptDay, keptNight, zDay, zNight, nDay: meta.n_day, nNight: meta.n_night };
+}
+const fmt = n => n.toLocaleString("en-US");
+const pct = (a, b) => b ? (a / b * 100).toFixed(1) + "%" : "–";
+const avg = (a, b) => b ? (a / b).toFixed(1) : "–";
+function renderStats() {
+  const C = state.cameras[state.cam], meta = DATA.cameras[state.cam], s = stats;
+  document.getElementById("camLabel").textContent = state.cam + " " + meta.name;
+  if (!s) { document.getElementById("stats").innerHTML = ""; return; }
+  const rows = [
+    ["Frames (two weeks)", `${fmt(meta.n_frames)} (day ${fmt(meta.n_day)} / night ${fmt(meta.n_night)})`],
+    ["Detections", fmt(s.n)],
+    ["sep"],
+    ["Removed: outside road", C.road.length ? `${fmt(s.out)} (${pct(s.out, s.n)})` : '<span class="muted">not drawn yet</span>'],
+    ["Removed: exclusion", C.exclude.length ? `${fmt(s.ex)} (${pct(s.ex, s.n)}) in ${fmt(s.exFrames)} frames` : '<span class="muted">not drawn yet</span>'],
+    ["Kept", `${fmt(s.kept)} (${pct(s.kept, s.n)})`],
+    ["sep"],
+    ["Vehicles per frame, day", `${avg(s.allDay, s.nDay)} → <b>${avg(s.keptDay, s.nDay)}</b>`],
+    ["Vehicles per frame, night", `${avg(s.allNight, s.nNight)} → <b>${avg(s.keptNight, s.nNight)}</b>`],
+    ["Per frame in zones", C.zone.length ? `day ${avg(s.zDay, s.nDay)} / night ${avg(s.zNight, s.nNight)}` : '<span class="muted">not drawn yet</span>'],
+  ];
+  document.getElementById("stats").innerHTML = rows.map(r => r[0] === "sep" ? '<div class="sep"></div>' : `<div>${r[0]}</div><div class="v">${r[1]}</div>`).join("");
+}
+
+// ---------- view coordinates ----------
+const stage = document.getElementById("stage"), base = document.getElementById("base"), overlay = document.getElementById("overlay");
+const bctx = base.getContext("2d"), octx = overlay.getContext("2d");
+let W = 0, H = 0, dpr = 1;
+function resize() {
+  dpr = window.devicePixelRatio || 1; W = stage.clientWidth; H = stage.clientHeight;
+  for (const cv of [base, overlay]) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  clampView(); drawBase(); drawOverlay();
+}
+const toS = (nx, ny) => [view.ox + nx * W * view.s, view.oy + ny * H * view.s];
+const toN = (sx, sy) => [(sx - view.ox) / (W * view.s), (sy - view.oy) / (H * view.s)];
+function clampView() { view.s = Math.max(1, Math.min(12, view.s));
+  view.ox = Math.min(0, Math.max(W - W * view.s, view.ox)); view.oy = Math.min(0, Math.max(H - H * view.s, view.oy)); }
+function zoomAt(sx, sy, f) { const [nx, ny] = toN(sx, sy); view.s *= f; clampView(); view.ox = sx - nx * W * view.s; view.oy = sy - ny * H * view.s; clampView(); scheduleBase(); drawOverlay(); }
+
+// ---------- drawing ----------
+let baseQueued = false;
+function scheduleBase() { if (!baseQueued) { baseQueued = true; requestAnimationFrame(() => { baseQueued = false; drawBase(); }); } }
+function drawBase() {
+  bctx.setTransform(dpr, 0, 0, dpr, 0, 0); bctx.fillStyle = "#101318"; bctx.fillRect(0, 0, W, H);
+  const im = loadImg(state.cam, state.ref);
+  if (im.complete && im.naturalWidth) bctx.drawImage(im, view.ox, view.oy, W * view.s, H * view.s);
+  const P = pts[state.cam]; if (!P) return;
+  const sz = Math.max(2, Math.min(5, 1.6 * Math.sqrt(view.s))), half = sz / 2, sw = W * view.s, sh = H * view.s;
+  const passes = [[0, "#ff2bc8"], [1, "#d7dbe0"], [2, "#20d3ff"]];
+  bctx.globalAlpha = state.alpha;
+  for (const [kind, color] of passes) {
+    if (kind && !state.showRemoved) continue;
+    bctx.fillStyle = color; bctx.globalAlpha = Math.min(1, state.alpha * (kind ? 1.4 : 1));
+    for (let i = 0; i < P.n; i++) {
+      const s = P.status[i], k = s >= 2 ? 2 : s; if (k !== kind) continue;
+      if (state.period !== "all" && isDayHour(P.hour[i]) !== (state.period === "day")) continue;
+      const x = view.ox + P.nx[i] * sw, y = view.oy + P.ny[i] * sh;
+      if (x < -4 || y < -4 || x > W + 4 || y > H + 4) continue;
+      bctx.fillRect(x - half, y - half, sz, sz);
+    }
+  }
+  bctx.globalAlpha = 1;
+}
+function polyPath(ctx, poly) { ctx.beginPath(); poly.forEach(([x, y], i) => { const [a, b] = toS(x, y); i ? ctx.lineTo(a, b) : ctx.moveTo(a, b); }); ctx.closePath(); }
+function handle(ctx, x, y) { const [a, b] = toS(x, y); ctx.fillStyle = "#fff"; ctx.strokeStyle = "#1d2128"; ctx.lineWidth = 1; ctx.fillRect(a - 4, b - 4, 8, 8); ctx.strokeRect(a - 4, b - 4, 8, 8); }
+function drawOverlay() {
+  octx.setTransform(dpr, 0, 0, dpr, 0, 0); octx.clearRect(0, 0, W, H);
+  const C = state.cameras[state.cam], meta = DATA.cameras[state.cam];
+  const isSel = (t, i) => state.sel && state.sel.type === t && state.sel.i === i;
+  for (const [type, color, fill] of [["road", "#22c55e", "rgba(34,197,94,.07)"], ["zone", "#f59e0b", "rgba(245,158,11,.14)"]]) {
+    C[type].forEach((poly, i) => { polyPath(octx, poly); octx.fillStyle = fill; octx.fill(); octx.strokeStyle = color; octx.lineWidth = isSel(type, i) ? 3 : 2; octx.stroke();
+      const [a, b] = toS(poly[0][0], poly[0][1]); octx.fillStyle = color; octx.font = "bold 12px sans-serif"; octx.fillText((type === "road" ? "Road " : "Zone ") + (i + 1), a + 6, b - 6);
+      if (isSel(type, i)) poly.forEach(([x, y]) => handle(octx, x, y)); });
+  }
+  C.exclude.forEach((e, i) => { const [a, b] = toS(e.box[0], e.box[1]), [c, d] = toS(e.box[2], e.box[3]);
+    octx.fillStyle = "rgba(239,68,68,.16)"; octx.fillRect(a, b, c - a, d - b); octx.strokeStyle = "#ef4444"; octx.lineWidth = isSel("excl", i) ? 3 : 2; octx.strokeRect(a, b, c - a, d - b);
+    octx.fillStyle = "#ef4444"; octx.font = "bold 12px sans-serif"; octx.fillText("Excl " + (i + 1) + (e.when !== "all" ? (e.when === "day" ? " · day" : " · night") : ""), a, b - 4);
+    if (isSel("excl", i)) [[0, 1], [2, 1], [0, 3], [2, 3]].forEach(([p, q]) => handle(octx, e.box[p], e.box[q])); });
+  if (state.showCand) meta.candidates.forEach((cd, i) => { const [a, b] = toS(cd.box[0], cd.box[1]), [c, d] = toS(cd.box[2], cd.box[3]);
+    const focus = state.focusCand === i; octx.strokeStyle = focus ? "#ffe14d" : "rgba(255,225,77,.75)"; octx.lineWidth = focus ? 3 : 1.5; octx.setLineDash(focus ? [] : [4, 3]);
+    octx.strokeRect(a - 3, b - 3, c - a + 6, d - b + 6); octx.setLineDash([]); octx.fillStyle = "#ffe14d"; octx.font = (focus ? "bold 14px" : "bold 11px") + " sans-serif"; octx.fillText("#" + (i + 1), c + 5, b + 10); });
+  if (state.previewZones) state.previewZones.forEach((poly, i) => { polyPath(octx, poly); octx.fillStyle = "rgba(32,211,255,.15)"; octx.fill();
+    octx.setLineDash([7, 4]); octx.strokeStyle = "#20d3ff"; octx.lineWidth = 3; octx.stroke(); octx.setLineDash([]);
+    const [a, b] = toS(poly[0][0], poly[0][1]); octx.fillStyle = "#20d3ff"; octx.font = "bold 13px sans-serif"; octx.fillText("Preview " + (i + 1), a + 6, b - 6); });
+  if (draft && draft.kind === "poly") { const color = draft.type === "road" ? "#22c55e" : "#f59e0b";
+    octx.beginPath(); draft.pts.forEach(([x, y], i) => { const [a, b] = toS(x, y); i ? octx.lineTo(a, b) : octx.moveTo(a, b); });
+    if (draft.cursor) { const [a, b] = toS(draft.cursor[0], draft.cursor[1]); octx.lineTo(a, b); }
+    octx.strokeStyle = color; octx.lineWidth = 2; octx.setLineDash([6, 4]); octx.stroke(); octx.setLineDash([]); draft.pts.forEach(([x, y]) => handle(octx, x, y)); }
+  if (draft && draft.kind === "rect" && draft.b) { const [a, b] = toS(Math.min(draft.a[0], draft.b[0]), Math.min(draft.a[1], draft.b[1])), [c, d] = toS(Math.max(draft.a[0], draft.b[0]), Math.max(draft.a[1], draft.b[1]));
+    octx.strokeStyle = "#ef4444"; octx.setLineDash([6, 4]); octx.lineWidth = 2; octx.strokeRect(a, b, c - a, d - b); octx.setLineDash([]); }
+}
+
+// ---------- side panel ----------
+const WHEN = { all: "All day", day: "Day only", night: "Night only" };
+const RULE = { point: "Remove if point inside", box: "Remove if whole box inside" };
+function renderShapes() {
+  const C = state.cameras[state.cam], el = document.getElementById("shapes"), items = [];
+  const selCls = (t, i) => state.sel && state.sel.type === t && state.sel.i === i ? " sel" : "";
+  C.road.forEach((p, i) => items.push(`<div class="item${selCls("road", i)}" data-t="road" data-i="${i}"><div class="row"><span class="tag road">Road ${i + 1}</span><span class="muted">${p.length} vertices</span><span style="flex:1"></span><button class="btn small danger" data-del="road:${i}">Delete</button></div></div>`));
+  C.zone.forEach((p, i) => items.push(`<div class="item${selCls("zone", i)}" data-t="zone" data-i="${i}"><div class="row"><span class="tag zone">Zone ${i + 1}</span><span class="muted">${p.length} vertices</span><span style="flex:1"></span><button class="btn small danger" data-del="zone:${i}">Delete</button></div></div>`));
+  C.exclude.forEach((e, i) => { const n = stats ? stats.exN[i] : 0, f = stats ? stats.exF[i] : 0;
+    items.push(`<div class="item${selCls("excl", i)}" data-t="excl" data-i="${i}"><div class="row"><span class="tag excl">Excl ${i + 1}</span><input type="text" placeholder="Note, e.g. car icon on a road sign" value="${esc(e.note)}" data-note="${i}"><button class="btn small danger" data-del="excl:${i}">Delete</button></div>
+    <div class="row" style="margin-top:4px"><select data-when="${i}">${Object.entries(WHEN).map(([k, v]) => `<option value="${k}"${e.when === k ? " selected" : ""}>${v}</option>`).join("")}</select>
+    <select data-rule="${i}">${Object.entries(RULE).map(([k, v]) => `<option value="${k}"${e.rule === k ? " selected" : ""}>${v}</option>`).join("")}</select>
+    <span class="muted">removes ${fmt(n)} · ${fmt(f)} frames${stats && stats.exR[i] ? ` (another ${fmt(stats.exR[i])} already outside road)` : ""}</span></div></div>`); });
+  const bar = C.draft ? `<div class="draftbar"><span style="flex:1">This is an automatically generated <b>suggested draft</b>. Drag the vertices to adjust, then click "Confirm".</span><button class="btn small" data-act="confirm">Confirm</button></div>` : "";
+  const tail = `<div class="row" style="margin-top:6px"><button class="btn small" data-act="reload">Reload suggested draft</button></div>`;
+  el.innerHTML = bar + (items.join("") || '<div class="muted" style="font-size:12px">No shapes yet.</div>') + tail;
+  document.getElementById("shapeCount").textContent = `road ${C.road.length} · zones ${C.zone.length} · exclusions ${C.exclude.length}`;
+}
+function renderCands() {
+  const meta = DATA.cameras[state.cam], C = state.cameras[state.cam];
+  const clsName = { car: "car", motorcycle: "motorcycle", bus: "bus", truck: "truck" };
+  document.getElementById("cands").innerHTML = meta.candidates.map((cd, i) => {
+    const added = C.exclude.some(e => e.note === "candidate #" + (i + 1) || (Math.abs(e.box[0] - cd.box[0]) < .02 && Math.abs(e.box[1] - cd.box[1]) < .02));
+    const cls = Object.entries(cd.cls).map(([k, v]) => clsName[k] + " " + v).join(", ");
+    return `<div class="item${state.focusCand === i ? " sel" : ""}"><div class="row"><b>#${i + 1}</b><span>in ${cd.day_pct}% of day · ${cd.night_pct}% of night frames</span></div>
+    <div class="row muted">${cls} · median confidence ${cd.conf}</div>
+    <div class="row" style="margin-top:4px"><button class="btn small" data-focus="${i}">Locate</button><button class="btn small" data-add="${i}"${added ? " disabled" : ""}>${added ? "Added" : "Add to exclusions"}</button></div></div>`;
+  }).join("") || '<div class="muted" style="font-size:12px">No recurring positions found.</div>';
+}
+function renderZoneOpts() {
+  const opts = (DATA.cameras[state.cam].suggest || {}).zone_options || [];
+  document.getElementById("zopts").innerHTML = opts.map((o, i) => `<div class="item" data-zprev="${i}"><div class="row"><b>${o.name}</b><span class="muted">${o.zones.length} zone(s)</span><span style="flex:1"></span><button class="btn small" data-zopt="${i}">Use this</button></div><div class="muted" style="margin-top:2px">${o.desc}</div></div>`).join("")
+    || '<div class="muted" style="font-size:12px">No options for this camera; please draw manually.</div>';
+}
+function renderTabs() {
+  document.getElementById("tabs").innerHTML = CAMS.map(c => { const C = state.cameras[c], st = C.draft ? "draft" : C.road.length ? "done" : "";
+    const tip = { draft: "suggested draft, not confirmed", done: "confirmed", "": "not drawn" }[st];
+    return `<div class="tab${c === state.cam ? " on" : ""}" data-cam="${c}"><b>${c}</b>${DATA.cameras[c].name}<span class="dot ${st}" title="${tip}"></span></div>`; }).join("");
+}
+const HINTS = {
+  edit: "Select a shape to drag its vertices or box corners; drag inside a box to move it. Double-click a polygon edge to add a vertex, double-click a vertex to delete it.",
+  road: "Click along the road edge to add vertices; click the first vertex, double-click or press Enter to finish; Backspace removes the last vertex, Esc cancels.",
+  zone: "Click around a near section of lanes; keep it compact, clear and where queues form. Finish as above.",
+  excl: "Drag a box around a cluster of fixed false positives. Then set its time window and rule in the side panel.",
+};
+function renderAll() { renderTabs(); renderStats(); renderShapes(); renderZoneOpts(); renderCands(); drawOverlay(); document.getElementById("hint").textContent = HINTS[state.mode]; }
+function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch])); }
+let toastT; function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2200); }
+
+// ---------- edits (single entry point, for undo) ----------
+function pushUndo() { (undo[state.cam] = undo[state.cam] || []).push(JSON.stringify(state.cameras[state.cam])); if (undo[state.cam].length > 80) undo[state.cam].shift(); }
+function changed() { classify(); save(); drawBase(); renderAll(); }
+function doUndo() { const u = undo[state.cam]; if (!u || !u.length) { toast("Nothing to undo"); return; } state.cameras[state.cam] = JSON.parse(u.pop()); state.sel = null; changed(); }
+const r4 = v => Math.round(Math.min(1, Math.max(0, v)) * 10000) / 10000;
+const snap = v => v < 0.012 ? 0 : v > 0.988 ? 1 : r4(v);  // snap vertices near the image border onto it
+
+// ---------- mouse interaction ----------
+function evPos(ev) { const r = overlay.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; }
+function hitShape(sx, sy) {
+  const C = state.cameras[state.cam], [nx, ny] = toN(sx, sy), near = (x, y) => { const [a, b] = toS(x, y); return Math.hypot(a - sx, b - sy) <= 8; };
+  if (state.sel) { const { type, i } = state.sel;
+    if (type === "excl" && C.exclude[i]) { const bx = C.exclude[i].box; for (const [p, q] of [[0, 1], [2, 1], [0, 3], [2, 3]]) if (near(bx[p], bx[q])) return { what: "corner", type, i, p, q }; }
+    if ((type === "road" || type === "zone") && C[type][i]) { const poly = C[type][i]; for (let v = 0; v < poly.length; v++) if (near(poly[v][0], poly[v][1])) return { what: "vertex", type, i, v }; } }
+  for (let i = C.exclude.length - 1; i >= 0; i--) { const b = C.exclude[i].box; if (nx >= b[0] && nx <= b[2] && ny >= b[1] && ny <= b[3]) return { what: "body", type: "excl", i }; }
+  for (const type of ["zone", "road"]) for (let i = C[type].length - 1; i >= 0; i--) {
+    const poly = C[type][i]; for (let v = 0; v < poly.length; v++) if (near(poly[v][0], poly[v][1])) return { what: "vertex", type, i, v };
+    if (pip(nx, ny, poly)) return { what: "body", type, i }; }
+  return null;
+}
+overlay.addEventListener("contextmenu", ev => ev.preventDefault());
+overlay.addEventListener("wheel", ev => { ev.preventDefault(); const [sx, sy] = evPos(ev); zoomAt(sx, sy, ev.deltaY < 0 ? 1.25 : 0.8); }, { passive: false });
+overlay.addEventListener("mousedown", ev => {
+  const [sx, sy] = evPos(ev), [nx, ny] = toN(sx, sy);
+  if (ev.button === 2 || ev.button === 1 || spaceDown) { drag = { kind: "pan", sx, sy, ox: view.ox, oy: view.oy }; return; }
+  if (ev.button !== 0) return;
+  if (state.mode === "excl") { draft = { kind: "rect", a: [nx, ny], b: null }; return; }
+  if (state.mode === "road" || state.mode === "zone") {
+    if (!draft) draft = { kind: "poly", type: state.mode, pts: [] };
+    if (draft.pts.length >= 3) { const [a, b] = toS(draft.pts[0][0], draft.pts[0][1]); if (Math.hypot(a - sx, b - sy) <= 10) { finishPoly(); return; } }
+    draft.pts.push([snap(nx), snap(ny)]); drawOverlay(); return;
+  }
+  const hit = hitShape(sx, sy);
+  if (!hit) { state.sel = null; renderShapes(); drawOverlay(); return; }
+  state.sel = { type: hit.type, i: hit.i };
+  if (hit.what === "vertex" || hit.what === "corner" || (hit.what === "body" && hit.type === "excl")) {
+    pushUndo(); drag = { kind: hit.what, hit, start: [nx, ny], orig: JSON.parse(JSON.stringify(hit.type === "excl" ? state.cameras[state.cam].exclude[hit.i].box : state.cameras[state.cam][hit.type][hit.i])), moved: false };
+  }
+  renderShapes(); drawOverlay();
+});
+window.addEventListener("mousemove", ev => {
+  const [sx, sy] = evPos(ev), [nx, ny] = toN(sx, sy);
+  if (drag && drag.kind === "pan") { view.ox = drag.ox + sx - drag.sx; view.oy = drag.oy + sy - drag.sy; clampView(); scheduleBase(); drawOverlay(); return; }
+  if (drag) { const C = state.cameras[state.cam], h = drag.hit; drag.moved = true;
+    if (drag.kind === "vertex") C[h.type][h.i][h.v] = [snap(nx), snap(ny)];
+    else if (drag.kind === "corner") { const b = C.exclude[h.i].box; b[h.p] = r4(nx); b[h.q] = r4(ny); }
+    else if (drag.kind === "body") { const dx = nx - drag.start[0], dy = ny - drag.start[1], o = drag.orig; const w = o[2] - o[0], hh = o[3] - o[1];
+      const x0 = Math.min(1 - w, Math.max(0, o[0] + dx)), y0 = Math.min(1 - hh, Math.max(0, o[1] + dy)); C.exclude[h.i].box = [r4(x0), r4(y0), r4(x0 + w), r4(y0 + hh)]; }
+    drawOverlay(); return; }
+  if (draft && draft.kind === "rect" && ev.buttons & 1) { draft.b = [r4(nx), r4(ny)]; drawOverlay(); return; }
+  if (draft && draft.kind === "poly") { draft.cursor = [nx, ny]; drawOverlay(); }
+  overlay.style.cursor = spaceDown ? "grab" : state.mode === "edit" ? (hitShape(sx, sy) ? "pointer" : "default") : "crosshair";
+});
+window.addEventListener("mouseup", () => {
+  if (drag) { const d = drag; drag = null;
+    if (d.kind !== "pan") { const C = state.cameras[state.cam];
+      if (d.kind === "corner") { const b = C.exclude[d.hit.i].box; C.exclude[d.hit.i].box = [Math.min(b[0], b[2]), Math.min(b[1], b[3]), Math.max(b[0], b[2]), Math.max(b[1], b[3])]; }
+      if (d.moved) changed(); else undo[state.cam].pop(); }
+    return; }
+  if (draft && draft.kind === "rect") { const d = draft; draft = null;
+    if (d.b) { const [a, b] = toS(d.a[0], d.a[1]), [c, e] = toS(d.b[0], d.b[1]);
+      if (Math.abs(c - a) >= 4 && Math.abs(e - b) >= 4) { pushUndo(); const C = state.cameras[state.cam];
+        C.exclude.push({ box: [r4(Math.min(d.a[0], d.b[0])), r4(Math.min(d.a[1], d.b[1])), r4(Math.max(d.a[0], d.b[0])), r4(Math.max(d.a[1], d.b[1]))], when: "all", rule: "point", note: "" });
+        state.sel = { type: "excl", i: C.exclude.length - 1 }; setMode("edit"); changed(); return; } }
+    drawOverlay(); }
+});
+overlay.addEventListener("dblclick", ev => {
+  const [sx, sy] = evPos(ev), [nx, ny] = toN(sx, sy);
+  if (draft && draft.kind === "poly") { // a double-click fires two clicks first: drop the duplicate vertices, then finish
+    while (draft.pts.length > 1) { const [a, b] = toS(...draft.pts[draft.pts.length - 1]), [c, d] = toS(...draft.pts[draft.pts.length - 2]); if (Math.hypot(a - c, b - d) < 4) draft.pts.pop(); else break; }
+    finishPoly(); return; }
+  if (state.mode !== "edit") return;
+  const C = state.cameras[state.cam], hit = hitShape(sx, sy);
+  if (hit && hit.what === "vertex") { const poly = C[hit.type][hit.i]; if (poly.length > 3) { pushUndo(); poly.splice(hit.v, 1); changed(); } else toast("A polygon needs at least 3 vertices"); return; }
+  if (state.sel && (state.sel.type === "road" || state.sel.type === "zone")) { const poly = C[state.sel.type][state.sel.i]; let best = null;
+    for (let v = 0; v < poly.length; v++) { const p = toS(...poly[v]), q = toS(...poly[(v + 1) % poly.length]); const dd = segDist(sx, sy, p, q); if (!best || dd < best.d) best = { d: dd, v }; }
+    if (best && best.d <= 8) { pushUndo(); poly.splice(best.v + 1, 0, [r4(nx), r4(ny)]); changed(); } }
+});
+function segDist(x, y, p, q) { const dx = q[0] - p[0], dy = q[1] - p[1], L = dx * dx + dy * dy; let t = L ? ((x - p[0]) * dx + (y - p[1]) * dy) / L : 0; t = Math.max(0, Math.min(1, t)); return Math.hypot(x - (p[0] + t * dx), y - (p[1] + t * dy)); }
+function finishPoly() {
+  const d = draft; draft = null;
+  if (!d || d.pts.length < 3) { toast("At least 3 vertices are needed"); drawOverlay(); return; }
+  pushUndo(); const C = state.cameras[state.cam]; C[d.type].push(d.pts); state.sel = { type: d.type, i: C[d.type].length - 1 }; setMode("edit"); changed();
+}
+window.addEventListener("keydown", ev => {
+  const typing = /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName);
+  if (ev.code === "Space" && !typing) { spaceDown = true; ev.preventDefault(); return; }
+  if (typing) return;
+  if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "z") { ev.preventDefault(); doUndo(); return; }
+  if (draft && draft.kind === "poly") {
+    if (ev.key === "Enter") { finishPoly(); return; }
+    if (ev.key === "Backspace") { ev.preventDefault(); draft.pts.pop(); if (!draft.pts.length) draft = null; drawOverlay(); return; }
+  }
+  if (ev.key === "Escape") { draft = null; setMode("edit"); drawOverlay(); return; }
+  if ((ev.key === "Delete" || ev.key === "Backspace") && state.sel) { ev.preventDefault(); deleteShape(state.sel.type, state.sel.i); }
+});
+window.addEventListener("keyup", ev => { if (ev.code === "Space") spaceDown = false; });
+function deleteShape(type, i) { pushUndo(); const C = state.cameras[state.cam]; (type === "excl" ? C.exclude : C[type]).splice(i, 1); state.sel = null; changed(); }
+
+// ---------- side panel events ----------
+document.getElementById("shapes").addEventListener("click", ev => {
+  const act = ev.target.closest("[data-act]"); if (act) { act.dataset.act === "confirm" ? confirmDraft() : reloadDraft(); return; }
+  const del = ev.target.closest("[data-del]"); if (del) { const [t, i] = del.dataset.del.split(":"); deleteShape(t, +i); return; }
+  const it = ev.target.closest(".item"); if (it && !/INPUT|SELECT|OPTION/.test(ev.target.tagName)) { state.sel = { type: it.dataset.t, i: +it.dataset.i }; renderShapes(); drawOverlay(); }
+});
+document.getElementById("shapes").addEventListener("change", ev => {
+  const C = state.cameras[state.cam], t = ev.target;
+  if (t.dataset.when !== undefined) { pushUndo(); C.exclude[+t.dataset.when].when = t.value; changed(); }
+  if (t.dataset.rule !== undefined) { pushUndo(); C.exclude[+t.dataset.rule].rule = t.value; changed(); }
+  if (t.dataset.note !== undefined) { pushUndo(); C.exclude[+t.dataset.note].note = t.value; save(); renderCands(); }
+});
+document.getElementById("cands").addEventListener("click", ev => {
+  const meta = DATA.cameras[state.cam], f = ev.target.closest("[data-focus]"), a = ev.target.closest("[data-add]");
+  if (f) { const i = +f.dataset.focus; state.focusCand = i; const b = meta.candidates[i].box;
+    view.s = 4; clampView(); view.ox = W / 2 - (b[0] + b[2]) / 2 * W * view.s; view.oy = H / 2 - (b[1] + b[3]) / 2 * H * view.s; clampView();
+    drawBase(); renderCands(); drawOverlay(); return; }
+  if (a) { const i = +a.dataset.add, b = meta.candidates[i].box, pw = Math.max(.004, (b[2] - b[0]) * .35), ph = Math.max(.006, (b[3] - b[1]) * .35);
+    pushUndo(); const C = state.cameras[state.cam];
+    C.exclude.push({ box: [r4(b[0] - pw), r4(b[1] - ph), r4(b[2] + pw), r4(b[3] + ph)], when: "all", rule: "point", note: "candidate #" + (i + 1) });
+    state.sel = { type: "excl", i: C.exclude.length - 1 }; state.focusCand = i; changed(); toast("Added to the exclusion set; you can add a note in the side panel"); }
+});
+
+const zoptsEl = document.getElementById("zopts");
+zoptsEl.addEventListener("mouseover", ev => { const it = ev.target.closest("[data-zprev]"); if (!it) return;
+  const o = DATA.cameras[state.cam].suggest.zone_options[+it.dataset.zprev]; if (state.previewZones !== o.zones) { state.previewZones = o.zones; drawOverlay(); } });
+zoptsEl.addEventListener("mouseleave", () => { state.previewZones = null; drawOverlay(); });
+zoptsEl.addEventListener("click", ev => { const b = ev.target.closest("[data-zopt]"); if (!b) return;
+  const o = DATA.cameras[state.cam].suggest.zone_options[+b.dataset.zopt];
+  pushUndo(); state.cameras[state.cam].zone = JSON.parse(JSON.stringify(o.zones)); state.previewZones = null; state.sel = null; changed(); toast("Detection zone set to \"" + o.name + "\"; drag the vertices to adjust"); });
+
+// ---------- toolbar ----------
+function setMode(m) { state.mode = m; if (m !== "road" && m !== "zone") { if (draft && draft.kind === "poly") draft = null; }
+  document.querySelectorAll("#modeGrp [data-mode]").forEach(b => b.classList.toggle("on", b.dataset.mode === m));
+  document.getElementById("hint").textContent = HINTS[m]; overlay.style.cursor = m === "edit" ? "default" : "crosshair"; }
+document.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { draft = null; setMode(b.dataset.mode); drawOverlay(); });
+document.querySelectorAll("[data-ref]").forEach(b => b.onclick = () => { state.ref = b.dataset.ref; document.querySelectorAll("[data-ref]").forEach(x => x.classList.toggle("on", x === b)); drawBase(); });
+document.querySelectorAll("[data-period]").forEach(b => b.onclick = () => { state.period = b.dataset.period; document.querySelectorAll("[data-period]").forEach(x => x.classList.toggle("on", x === b)); drawBase(); });
+document.getElementById("alpha").oninput = e => { state.alpha = +e.target.value; scheduleBase(); };
+document.getElementById("showRemoved").onchange = e => { state.showRemoved = e.target.checked; drawBase(); };
+document.getElementById("showCand").onchange = e => { state.showCand = e.target.checked; drawOverlay(); };
+document.getElementById("zoomIn").onclick = () => zoomAt(W / 2, H / 2, 1.5);
+document.getElementById("zoomOut").onclick = () => zoomAt(W / 2, H / 2, 1 / 1.5);
+document.getElementById("zoomReset").onclick = () => { view.s = 1; view.ox = 0; view.oy = 0; state.focusCand = null; drawBase(); renderCands(); drawOverlay(); };
+document.getElementById("tabs").addEventListener("click", ev => { const t = ev.target.closest("[data-cam]"); if (t) switchCam(t.dataset.cam); });
+
+// ---------- export / import ----------
+function exportConfig() {
+  const out = { format: "camera_filter/v1", created: new Date().toISOString(),
+    point: "bottom-centre of the detection box (normalised 0-1, origin at top-left)",
+    rules: { road: "keep a detection only if its point lies in any road polygon; cameras without a road region are not filtered by road",
+      exclude: "point: remove if the point lies in the box; box: remove only if the whole detection box lies in it. when: all / day / night",
+      day_hours_sgt: [DAY0, DAY1] },
+    source: DATA.source, cameras: {} };
+  for (const c of CAMS) { const C = state.cameras[c]; out.cameras[c] = { name: DATA.cameras[c].name, confirmed: !C.draft && C.road.length > 0, road: C.road, zone: C.zone, exclude: C.exclude }; }
+  const pending = CAMS.filter(c => state.cameras[c].draft || !state.cameras[c].road.length);
+  const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "camera_filter.json"; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast(pending.length ? `Exported. ${pending.length} camera(s) not confirmed yet: ${pending.join(", ")}` : "Exported camera_filter.json; all 8 cameras confirmed");
+}
+document.getElementById("btnExport").onclick = exportConfig;
+document.getElementById("btnImport").onclick = () => document.getElementById("fileImport").click();
+document.getElementById("fileImport").onchange = async ev => {
+  const f = ev.target.files[0]; if (!f) return;
+  try { const j = JSON.parse(await f.text()); if (!j.cameras) throw new Error("no cameras in the file");
+    let n = 0; for (const c of CAMS) if (j.cameras[c]) { (undo[c] = undo[c] || []).push(JSON.stringify(state.cameras[c])); state.cameras[c] = normCam(j.cameras[c]); n++; }
+    state.sel = null; changed(); toast(`Imported the config for ${n} camera(s)`);
+  } catch (e) { toast("Import failed: " + e.message); }
+  ev.target.value = "";
+};
+
+// ---------- suggested drafts ----------
+function seedDraft(c, force) {
+  const C = state.cameras[c], sg = DATA.cameras[c].suggest || { road: [], zone: [] };
+  if (!force && (C.seeded || C.road.length || C.zone.length)) return false;
+  C.road = JSON.parse(JSON.stringify(sg.road)); C.zone = JSON.parse(JSON.stringify(sg.zone));
+  C.seeded = true; C.draft = true; save(); return true;
+}
+function reloadDraft() { pushUndo(); seedDraft(state.cam, true); state.sel = null; classify(); drawBase(); renderAll(); toast("Suggested draft reloaded (exclusions unchanged)"); }
+function confirmDraft() { state.cameras[state.cam].draft = false; save(); renderAll(); toast("Confirmed " + state.cam); }
+
+// ---------- switching cameras ----------
+async function switchCam(c) {
+  state.alpha = Math.max(0.06, Math.min(0.6, Math.sqrt(2000 / DATA.cameras[c].n_points))); document.getElementById("alpha").value = state.alpha;
+  state.cam = c; state.sel = null; state.focusCand = null; draft = null; view.s = 1; view.ox = 0; view.oy = 0; stats = null;
+  renderAll(); drawBase();
+  const ld = document.getElementById("loading"); ld.style.display = "flex";
+  try { await loadCam(c); } catch (e) { ld.textContent = "Failed to load: " + e.message; return; }
+  if (state.cam !== c) return;
+  ld.style.display = "none";
+  if (seedDraft(c, false)) toast("Suggested draft loaded: drag the vertices to adjust, then click \"Confirm\"");
+  classify(); drawBase(); renderAll();
+}
+
+const s = DATA.source;
+document.getElementById("src").textContent = `Points: two weeks of detections from ${s.model || "the model"} at ${s.imgsz} px, confidence ≥ ${s.conf}; the ${s.held_out_images} human-labelled test images are excluded. Day = ${DAY0}:00–${DAY1}:00 Singapore time.`;
+new ResizeObserver(resize).observe(stage);
+setMode("edit");
+switchCam(state.cam);
+</script>
+</body>
+</html>

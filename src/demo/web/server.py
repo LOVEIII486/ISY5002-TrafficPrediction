@@ -25,7 +25,7 @@ if str(_ROOT) not in sys.path:
 
 import pandas as pd  # noqa: E402
 
-from src.demo import data, detection  # noqa: E402
+from src.demo import congestion, data, detection, filtering  # noqa: E402
 
 WEB_ROOT = Path(__file__).resolve().parent
 DEFAULT_PORT = 8600
@@ -455,6 +455,8 @@ def _cameras(query: dict[str, str]) -> dict[str, Any]:
                 "issues": stats.get("issues", []),
                 "first": first_iso,
                 "last": stats.get("last"),
+                # Removal counts from the camera filter; None when the filter has not been run.
+                "filter": filtering.summary().get(row.camera_id),
             }
         )
     return {"cameras": rows, "coverage": detection.coverage()}
@@ -481,13 +483,19 @@ def _frame(query: dict[str, str]) -> dict[str, Any]:
                 image = None
         if image is None:
             image = str(frame["image"].iloc[-1])
-    detail = detection.frame_detail(str(image))
+    detail = filtering.annotate(detection.frame_detail(str(image)))
+    detail["congestion"] = congestion.frame_level(str(image))
     detail["url"] = f"/lta/{image}"
     return detail
 
 
 def _detection_series(query: dict[str, str]) -> dict[str, Any]:
     return detection.series(query.get("camera", ""))
+
+
+def _congestion_heatmap(query: dict[str, str]) -> dict[str, Any]:
+    """Weekday x hour share of congested frames for one camera; empty when not available."""
+    return congestion.heatmap(query.get("camera", "")) or {}
 
 
 ROUTES = {
@@ -500,6 +508,7 @@ ROUTES = {
     "/api/detection/cameras": _cameras,
     "/api/detection/frame": _frame,
     "/api/detection/series": _detection_series,
+    "/api/congestion/heatmap": _congestion_heatmap,
 }
 
 

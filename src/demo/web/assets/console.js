@@ -140,6 +140,7 @@ const state = {
   graph: null,
   mapRange: null,
   cameras: [],
+  showFilter: true,
 };
 
 const VIEWS = {
@@ -478,7 +479,7 @@ async function loadMonitoring() {
   if (picked.first) timeInput.min = sgtInputValue(picked.first);
   if (picked.last) timeInput.max = sgtInputValue(picked.last);
   renderCameraTimeline(cameraSeries);
-  await showLatestFrame();
+  await Promise.all([showLatestFrame(), loadCongestion(picked.id)]);
   writeRoute();
 }
 
@@ -520,6 +521,11 @@ function renderReliability(camera) {
       camera.confidence === null ? "—" : Number(camera.confidence).toFixed(3)),
     metric(t("monitoring.reliability.completeness"), pct(camera.completeness)),
     metric(t("monitoring.reliability.last"), fmtSgt(camera.last)),
+    camera.filter ? metric(t("monitoring.reliability.filtered"), t("monitoring.filter.stats", {
+      pct: pct(camera.filter.removed_share),
+      road: Number(camera.filter.off_road).toLocaleString(),
+      exclude: Number(camera.filter.exclude).toLocaleString(),
+    })) : "",
   ].join("");
   $("reliability-note").innerHTML = healthChip(camera.health);
 }
@@ -590,10 +596,73 @@ const LABEL_ABOVE = 0.5;
 const FRAME_WIDTH = 1920;
 const FRAME_HEIGHT = 1080;
 
+/* Camera filter overlay (results/camera_filter/): the area outside the road region is dimmed,
+   detection zones are outlined, known false-positive spots are dotted, and boxes the filter
+   removed are drawn as red dashed boxes with the reason. Without the plugin's artifacts
+   detail.filter is null and the frame looks exactly as before. */
+const FILTER_COLOR = { zone: P.series[4], removed: "#d03b3b" };
+let lastFrame = null;
+
+function points(polygon) {
+  return polygon
+    .map(([x, y]) => `${(x * FRAME_WIDTH).toFixed(1)},${(y * FRAME_HEIGHT).toFixed(1)}`)
+    .join(" ");
+}
+
+function svgRect(className, [x1, y1, x2, y2], extra = "") {
+  return `<rect class="${className}" x="${(x1 * FRAME_WIDTH).toFixed(1)}" ` +
+    `y="${(y1 * FRAME_HEIGHT).toFixed(1)}" width="${((x2 - x1) * FRAME_WIDTH).toFixed(1)}" ` +
+    `height="${((y2 - y1) * FRAME_HEIGHT).toFixed(1)}"${extra}/>`;
+}
+
+function filterLayer(filter) {
+  const dim = filter.road.length
+    ? `<defs><mask id="road-mask">` +
+      `<rect class="cf-mask-bg" width="${FRAME_WIDTH}" height="${FRAME_HEIGHT}"/>` +
+      filter.road.map(poly => `<polygon class="cf-mask-hole" points="${points(poly)}"/>`).join("") +
+      `</mask></defs>` +
+      `<rect class="cf-dim" width="${FRAME_WIDTH}" height="${FRAME_HEIGHT}" mask="url(#road-mask)"/>`
+    : "";
+  const zones = filter.zones
+    .map(poly => `<polygon class="cf-zone" points="${points(poly)}" stroke="${FILTER_COLOR.zone}"/>`)
+    .join("");
+  const exclude = filter.exclude.map(item => svgRect("cf-exclude", item.box)).join("");
+  return dim + zones + exclude;
+}
+
+function removedBox(box) {
+  const x = box.x1 * FRAME_WIDTH;
+  const y = box.y1 * FRAME_HEIGHT;
+  return svgRect("cf-removed", [box.x1, box.y1, box.x2, box.y2],
+    ` stroke="${FILTER_COLOR.removed}" rx="3"`) +
+    `<text x="${x.toFixed(1)}" y="${(y - 8).toFixed(1)}" fill="${FILTER_COLOR.removed}" font-size="26">` +
+    `× ${t(`monitoring.filter.reason.${box.removed}`)}</text>`;
+}
+
+function filterLegend() {
+  return [
+    `<span><i class="cf-key-dim"></i>${t("monitoring.filter.outside")}</span>`,
+    `<span><i class="cf-key-zone" style="border-color:${FILTER_COLOR.zone}"></i>${t("monitoring.filter.zone")}</span>`,
+    `<span><i class="cf-key-exclude"></i>${t("monitoring.filter.exclude")}</span>`,
+    `<span><i class="cf-key-removed" style="border-color:${FILTER_COLOR.removed}"></i>${t("monitoring.filter.removed")}</span>`,
+  ].join("");
+}
+
+function filterToggle() {
+  return `<label class="form-check form-switch cf-toggle">` +
+    `<input class="form-check-input" type="checkbox" id="filter-toggle" ${state.showFilter ? "checked" : ""}>` +
+    `<span class="form-check-label">${t("monitoring.filter.toggle")}</span></label>`;
+}
+
 function renderFrame(detail, timestamp) {
+  lastFrame = { detail, timestamp };
+  const filtering = Boolean(detail.filter) && state.showFilter;
+  const kept = filtering ? detail.boxes.filter(box => !box.removed) : detail.boxes;
+  const dropped = filtering ? detail.boxes.filter(box => box.removed) : [];
   $("frame-image").src = detail.url;
   $("camera-frame").classList.add("has-frame");
-  $("frame-overlay").innerHTML = detail.boxes.map(box => {
+  $("frame-level").innerHTML = levelChip(detail.congestion);
+  $("frame-overlay").innerHTML = (filtering ? filterLayer(detail.filter) : "") + kept.map(box => {
     const color = CLASS_COLOR[box.cls] || P.muted;
     const x = box.x1 * FRAME_WIDTH;
     const y = box.y1 * FRAME_HEIGHT;
@@ -604,16 +673,18 @@ function renderFrame(detail, timestamp) {
     if (box.conf < LABEL_ABOVE) return rect;
     return rect + `<text x="${x.toFixed(1)}" y="${(y - 8).toFixed(1)}" fill="${color}" font-size="30">` +
       `${classLabel(box.cls)} ${box.conf.toFixed(2)}</text>`;
-  }).join("");
+  }).join("") + dropped.map(removedBox).join("");
 
-  const seen = new Set(detail.boxes.map(box => box.cls));
+  const seen = new Set(kept.map(box => box.cls));
   $("frame-legend").innerHTML = Object.keys(CLASS_COLOR)
     .map(name => `<span class="${seen.has(name) ? "" : "muted"}">` +
-      `<i style="background:${CLASS_COLOR[name]}"></i>${classLabel(name)}</span>`).join("");
-  const frameKey = detail.boxes.length === 1
-    ? "monitoring.frameNote.one" : "monitoring.frameNote";
+      `<i style="background:${CLASS_COLOR[name]}"></i>${classLabel(name)}</span>`).join("") +
+    (filtering ? filterLegend() : "") + (detail.filter ? filterToggle() : "");
+  const frameKey = dropped.length
+    ? "monitoring.frameNote.filtered"
+    : kept.length === 1 ? "monitoring.frameNote.one" : "monitoring.frameNote";
   $("frame-note").textContent = t(frameKey, {
-    count: detail.boxes.length, time: fmtSgt(timestamp),
+    count: kept.length, removed: dropped.length, time: fmtSgt(timestamp),
   });
 
   const picked = state.cameras.find(camera => camera.id === state.camera);
@@ -624,6 +695,68 @@ function renderFrame(detail, timestamp) {
   } else {
     zeroNote.hidden = true;
   }
+}
+
+/* Congestion layer (results/congestion/): a level chip on the frame and a weekday x hour heatmap
+   of the share of frames rated congested. The card stays hidden when the module has not been run. */
+const LEVEL_SEVERITY = { free: "normal", moderate: "watch", congested: "congested" };
+const HEAT_SCALE = [[0, "#f5f4f0"], [0.35, "#f8c9ae"], [0.7, "#eb6834"], [1, "#a8380f"]];
+
+function levelChip(level) {
+  if (!level) return "";
+  return `<span class="chip" data-severity="${LEVEL_SEVERITY[level.name]}" ` +
+    `title="${t("monitoring.congestion.chipTitle")}">${t(`congestion.level.${level.name}`)}</span>`;
+}
+
+async function loadCongestion(cameraId) {
+  const map = await api("/congestion/heatmap", { camera: cameraId });
+  $("congestion-card").hidden = !map.congested;
+  if (map.congested) renderCongestion(map);
+}
+
+function renderCongestion(map) {
+  const days = [0, 1, 2, 3, 4, 5, 6].map(day => t(`weekday.${day}`));
+  const hours = [...Array(24).keys()];
+  const text = map.congested.map((row, day) => row.map((value, hour) => value === null ? "" :
+    t("monitoring.congestion.hover", {
+      day: days[day], hour: pad(hour), congested: numPct(value),
+      busy: numPct(map.busy[day][hour]), frames: map.counts[day][hour],
+    })));
+
+  $("congestion-note").textContent = map.peak.share > 0
+    ? t("monitoring.congestion.note", {
+      share: pct(map.share.congested), day: days[map.peak.weekday],
+      hour: pad(map.peak.hour), peak: pct(map.peak.share),
+    })
+    : t("monitoring.congestion.noteNone", { busy: pct(map.share.busy) });
+
+  const ev = map.evaluation;
+  const method = [t("monitoring.congestion.method")];
+  if (!ev) method.push(t("monitoring.congestion.notEvaluated"));
+  else {
+    method.push(t("monitoring.congestion.accuracy", {
+      n: ev.n, acc: pct(ev.accuracy), lo: pct(ev.accuracy_ci95[0]), hi: pct(ev.accuracy_ci95[1]),
+      kappa: Number(ev.kappa).toFixed(2),
+    }));
+    if (ev.camera) {
+      method.push(t("monitoring.congestion.cameraAccuracy", { n: ev.camera.n, acc: pct(ev.camera.accuracy) }));
+    }
+  }
+  $("congestion-method").textContent = method.join(getLang() === "zh" ? "" : " ");
+
+  draw("chart-congestion", [{
+    type: "heatmap", x: hours, y: days, z: map.congested, text,
+    hovertemplate: "%{text}<extra></extra>", zmin: 0, zmax: 1, xgap: 2, ygap: 2,
+    colorscale: HEAT_SCALE,
+    colorbar: { thickness: 10, outlinewidth: 0, tickformat: ".0%", tickfont: { color: P.muted, size: 11 } },
+  }], {
+    xaxis: {
+      tickvals: [0, 3, 6, 9, 12, 15, 18, 21], ticktext: ["00", "03", "06", "09", "12", "15", "18", "21"],
+      title: { text: t("monitoring.congestion.x") }, showgrid: false, zeroline: false, ticks: "",
+    },
+    yaxis: { autorange: "reversed", showgrid: false, zeroline: false, ticks: "" },
+    margin: { l: 48, r: 8, t: 8, b: 44 },
+  });
 }
 
 function renderCameraTimeline(series) {
@@ -1273,6 +1406,12 @@ $("replay-range").addEventListener("change", () => {
 $("frame-range").addEventListener("input", () => {
   if (!cameraSeries) return;
   showFrame(Number($("frame-range").value)).catch(report);
+});
+
+$("frame-legend").addEventListener("change", event => {
+  if (event.target.id !== "filter-toggle") return;
+  state.showFilter = event.target.checked;
+  if (lastFrame) renderFrame(lastFrame.detail, lastFrame.timestamp);
 });
 
 $("frame-time").addEventListener("change", () => {

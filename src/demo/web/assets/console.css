@@ -118,6 +118,24 @@ html.lang-booting body { visibility: hidden; }
 .frame-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .frame-legend span.muted { opacity: 0.35; }
 .frame-legend i { display: block; width: 10px; height: 10px; border-radius: 2px; }
+/* Camera filter overlay: outside the road region dimmed, zones outlined, known false-positive
+   spots dotted, removed boxes red and dashed. */
+.camera-frame .cf-mask-bg { fill: #fff; stroke: none; }
+.camera-frame .cf-mask-hole { fill: #000; stroke: none; }
+.camera-frame .cf-dim { fill: #0b0b0b; fill-opacity: 0.45; stroke: none; }
+.camera-frame .cf-zone { fill: #e87ba4; fill-opacity: 0.14; stroke-width: 2.5; stroke-dasharray: 10 6; vector-effect: non-scaling-stroke; }
+.camera-frame .cf-exclude { fill: #fcfcfb; fill-opacity: 0.18; stroke: #fcfcfb; stroke-width: 1.5; stroke-dasharray: 3 4; }
+.camera-frame .cf-removed { stroke-dasharray: 6 4; }
+.frame-legend .cf-key-dim { background: #0b0b0b; opacity: 0.55; }
+.frame-legend .cf-key-zone { border: 2px dashed; background: rgba(232, 123, 164, 0.18); }
+.frame-legend .cf-key-exclude { border: 1.5px dotted var(--console-ink-2); }
+.frame-legend .cf-key-removed { border: 2px dashed; }
+.frame-legend .cf-toggle { margin: 0 0 0 auto; padding: 0; min-height: 0; display: inline-flex; align-items: center; gap: 6px; }
+.frame-legend .cf-toggle .form-check-input { margin: 0; float: none; }
+/* Congestion layer: level chip next to the frame note, weekday x hour heatmap card. */
+.frame-head-meta { display: inline-flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.chart-heatmap { height: 300px; }
+.congestion-method { margin: 12px 0 0; }
 .chart-map { height: 380px; }
 .chart-tall { height: 430px; }
 .chart-wide { height: 310px; }

@@ -65,6 +65,20 @@ results/imported/**/*.pt
 results/imported/**/*.tar
 results/imported/**/*.npz
 
+# Congestion analysis: human labels, the frozen ensemble config, the one-off test evaluation, the
+# per-frame levels used by the demo's heatmap and the report figures. Voter scores and CLIP trials stay local.
+!results/congestion/
+results/congestion/*
+!results/congestion/labeling/
+results/congestion/labeling/*
+!results/congestion/labeling/tasks.json
+!results/congestion/labeling/congestion_labels.json
+!results/congestion/ensemble_config.json
+!results/congestion/eval_test.json
+!results/congestion/eval_test_by_group.csv
+!results/congestion/congestion_levels.csv
+!results/congestion/report/
+
 notes/
 
 # ultralytics 的默认产物目录
