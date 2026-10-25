@@ -79,6 +79,11 @@ small vehicle scale make annotation difficult even for humans.
         a joint fine-tuning procedure that trains a COCO-pretrained YOLO26m on
         MIO-TCD and LTA images with teacher pseudo-labels; the model is applied
         to the full LTA collection.
+  \item A per-camera false-positive filter calibrated by hand for all eight
+        cameras, and a congestion-level estimate for all 15,316 LTA frames that
+        combines the detector, a classical vision method and a zero-shot
+        vision-language model; both are evaluated against human labels, with
+        method selection and testing kept on separate label sets.
   \item A common-protocol benchmark of eight forecasting models on PEMSD8,
         covering native and unified nine-channel inputs, with five-seed paired
         checks for the top four models.

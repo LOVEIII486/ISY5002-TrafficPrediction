@@ -14,6 +14,14 @@ of traffic-specific adaptation; the LTA figures remain teacher agreement rather
 than accuracy against human labels, and nighttime frames are the least reliable
 part of that proxy.
 
+Two modules extend the recognition output. A per-camera filter, calibrated by
+hand, raised precision on 63 human-labeled LTA images from 0.816 to 0.833 at a
+small cost in recall. A stacked ensemble of the detector count, background
+differencing and zero-shot CLIP rated all 15,316 frames as free-flowing,
+moderate or congested, agreeing with 74.3\% of 400 held-out human labels. The
+resulting heatmaps show recurring congestion on the Causeway and Second Link
+cameras at weekday peaks and on Saturdays.
+
 For traffic forecasting, eight models were evaluated on PEMSD8 under native and
 unified-input configurations. GWNET achieved the lowest MAE among the evaluated
 configurations, while MultiHeadSTGCN produced competitive results without a

@@ -12,6 +12,27 @@ set while retaining the accuracy gained from MIO-TCD. The human-labeled MIO-TCD
 test set provides the accuracy benchmark, and the LTA figures measure
 cross-domain agreement with the teacher.
 
+\subsection{Camera Filter and Congestion Levels}\label{sec:discussion-congestion}
+
+The camera filter shows that fixed scenes allow a simple, transparent correction
+of a learned detector: it removes 2.0\% of boxes and raises precision by 1.7
+points on unseen human-labeled images, without retraining. The gain is small
+because most errors on LTA frames are missed vehicles, which a filter cannot
+recover; recall, not precision, limits counting on these cameras.
+
+For congestion, a stacked combination of a trained detector, classical image
+processing and a zero-shot vision-language model agrees with 74.3\% of held-out
+human labels, and recognizes the congested level with precision 0.88 and recall
+0.84. Its 2.0-point gain over the detector count lies within the uncertainty of a
+400-frame test, so the result supports the method as a working estimate rather
+than showing that combining voters is necessary. The main difficulty is the
+moderate level, which is usually rated free-flowing, the boundary where the
+visual difference between levels is smallest. Because every design choice was
+made on practice labels and the test labels were used once, 74.3\% is a fair
+estimate for new frames from the same cameras and period. The levels are a
+visual judgement of the outlined road, not a calibrated flow or speed, so they do
+not close the integration gap described in Section~\ref{sec:method-integration}.
+
 \subsection{Forecasting Performance}\label{sec:discussion-forecasting}
 
 The forecasting module was selected through the common-protocol comparison.
@@ -83,6 +104,13 @@ collection.
   \item The workbench risk ranking is a threshold-based indicator defined on
         predicted speed. It supports comparative inspection but has not been
         validated against an independent congestion label.
+  \item The camera filter and congestion evaluations rely on a single
+        annotator. The congestion test set has 50 frames per camera, and two
+        weeks give each weekday only two or three days, so per-camera and
+        per-slot figures are uncertain.
+  \item Congestion is judged only inside the calibrated detection zones, not
+        along the whole road, and the zones and road regions must be
+        recalibrated if a camera is moved or re-aimed.
   \item The LTA images are still images at ten-minute intervals. They support
         vehicle counts per frame but not continuous passage counts at a point.
         A PEMSD8-style flow series would require continuous video, tracking,

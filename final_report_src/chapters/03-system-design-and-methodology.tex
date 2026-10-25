@@ -39,6 +39,52 @@ four-class evaluator. The joint model is then run at 1280 pixels over all
   \label{fig:architecture}
 \end{figure}
 
+\subsection{Camera Filter and Congestion Estimation}\label{sec:method-congestion}
+
+The joint detector runs on fixed cameras, so many of its false positives recur
+at the same image positions: road signs, traffic lights, lane markings and the
+central median. A per-camera filter removes them without retraining. Each camera
+is calibrated once with three elements in normalized image coordinates: a road
+region, an exclusion set and detection zones. A box is kept only if its
+bottom-centre point lies inside the road region. It is removed if it matches an
+exclusion entry, either when its point lies in the entry (point rule) or only
+when the whole box does (box rule), at all times or only by day or night. The
+box rule protects vehicles that queue beside a fixed false positive; it is used
+for a traffic light at camera 4703, where motorcycles wait next to it.
+
+Calibration uses a browser page that plots the bottom-centre points of two weeks
+of detections for each camera and proposes draft polygons from their density. A
+team member adjusts the vertices and accepts or rejects candidate false
+positives, which are boxes that recur at the same position. The 80 week-2
+validation images are excluded from calibration, so the human-labeled images in
+Section~\ref{sec:results-filter} are unseen. The filter can wrap the detector as
+a drop-in replacement or filter the existing detection table.
+
+The congestion module rates every LTA frame as free-flowing, moderate or
+congested, judging only the detection zones: near-field segments that cover the
+full width of one direction, drawn in the same calibration step. Three voters
+score each frame independently. Voter~A uses the filtered output of the joint
+detector: it counts vehicles whose bottom-centre lies in each zone and measures
+box occupancy, the share of zone area covered by boxes. Voter~B is classical
+image processing: for each camera and hour of day, a per-pixel median over two
+weeks gives a background, and Canny edges \parencite{canny1986edge} present in
+the frame but not in the background count as foreground, ignoring over-exposed
+pixels. Voter~C applies a pretrained vision-language model without further
+training: OpenCLIP ViT-B/16 trained on LAION-2B
+\parencite{radford2021clip,cherti2023openclip,schuhmann2022laion} compares a
+crop around the zones with three groups of text prompts, and its class
+probabilities give a congestion score.
+
+When a camera's zones cover two roads, the human label follows the more
+congested one, so each voter is computed both over all zones and for the busiest
+zone. Five candidate methods are compared: each voter alone with two cut points,
+the median of the three voters' levels, and stacking
+\parencite{wolpert1992stacking}, a multinomial logistic regression on the log
+vehicle count, occupancy and the B and C scores. Features, cut points and the
+primary method are chosen on practice labels only
+(Section~\ref{sec:setup-metrics}); the frozen primary method then rates all
+15,316 frames.
+
 \subsection{Forecasting Module}\label{sec:method-forecasting}
 
 The forecasting module operates on road-network time series. PEMSD8 provides a
@@ -121,6 +167,17 @@ visualization, not a validated congestion estimate. The shaded band is the
 10th--90th percentile of per-detector residuals on the test period, an empirical
 error range rather than a calibrated prediction interval.
 
+\paragraph{Camera filter and congestion layers.}
+The Monitoring view also shows two layers that read the outputs of
+Section~\ref{sec:method-congestion}. A camera-filter switch dims the area outside
+the road region, outlines the detection zones and draws the removed boxes with
+their reason, and the reliability panel reports the share of boxes removed for
+the camera. Each frame shows its congestion level, and a weekday-by-hour heatmap
+gives the share of congested frames for the selected camera together with its
+test-set accuracy. Without these outputs the view is unchanged. This congestion
+level describes the LTA camera view; it is separate from the speed-based risk
+indicator above, which is defined on PEMSD8.
+
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.92\linewidth]{workbench_overview.png}
@@ -143,6 +200,8 @@ The forecasting module uses LibCity \parencite{wang2021libcity,jiang2023libcity}
 PyTorch, NumPy, pandas and SciPy.\footnote{LibCity code:
 \url{https://github.com/LibCity/Bigscity-LibCity}} The workbench uses Python with
 static HTML, CSS and JavaScript (Tabler components).\footnote{\url{https://tabler.io/}}
+The camera filter and the congestion module use OpenCV, scikit-learn and
+OpenCLIP \parencite{cherti2023openclip}.
 Large prediction arrays and trained weights are not stored in version control;
 the benchmark commands regenerate the arrays consumed by the workbench.
 Detection accuracy is measured with COCO-style mAP

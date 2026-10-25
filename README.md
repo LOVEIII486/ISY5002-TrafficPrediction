@@ -1,14 +1,16 @@
 # ISY5002 交通预测与监测
 
-两个互相独立的模块，和一个把它们产物呈现出来的控制台：
+四个模块，和一个把它们产物呈现出来的控制台：
 
 | 模块 | 做什么 | 产物 |
 |---|---|---|
 | `src/forecast/` | 在公开数据集 PEMSD8 上训练、评估并对比时空预测模型，含一个自研模型 | `results/forecast/` |
 | `src/detection/` | 对 LTA 相机图跑目标检测，统计车辆 | `results/detection/` |
-| `src/demo/` | 控制台，按「模块间只通过产物通信」的约定读上面两者的产物 | 无 |
+| `src/camera_filter/` | 机位过滤插件：按机位人工标定道路范围和错误集，去掉检测结果里的固定误报，不重新训练模型 | `results/camera_filter/` |
+| `src/congestion/` | 拥挤分析：只看标定的检测区，用检测车辆数、背景差分和 CLIP 三种方法组合，给每帧定畅通 / 一般 / 拥挤 | `results/congestion/` |
+| `src/demo/` | 控制台，按「模块间只通过产物通信」的约定读上面各模块的产物 | 无 |
 
-两个模块**不互相 import**，只通过 `results/` 下的文件通信。
+检测和预测两个模块**不互相 import**，只通过 `results/` 下的文件通信；拥挤分析调用机位过滤插件。
 
 ---
 
@@ -117,6 +119,8 @@ python -m src.demo.web.server          # 默认 8600 端口
 |---|---|
 | `docs/FORECAST_RESULTS.md` | 预测部分的结果台账：定型模型、基线对照（含论文值）、消融阶梯、负结果、作废项、口径与噪声底线 |
 | `src/detection/README.md` | 检测模块的接入契约：换权重、写类名映射、换配置后清空产物 |
+| `src/camera_filter/README.md` | 机位过滤插件：标定方法、运行方式、在人工标注图上的评估结果 |
+| `src/congestion/README.md` | 拥挤分析：三种方法、人工标注规则、练习卷与考卷结果、运行顺序 |
 | `docs/LTA/` | LTA 交通图像 API 的接口文档与样本响应（相机坐标的来源） |
 | `submission/Project_Proposal_FT6.docx` | 立项时的提案 |
 

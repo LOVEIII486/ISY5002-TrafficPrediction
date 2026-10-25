@@ -13,6 +13,10 @@ presents camera monitoring, vehicle counts, forecast curves and a
 threshold-based risk ranking, while labeling the data source of each view. On
 MIO-TCD, fine-tuning raises mAP@0.5 from 0.430 to 0.720. On PEMSD8, GWNET
 achieves the lowest MAE among the evaluated configurations, and the custom model
-is competitive but not superior. The prototype does not close the loop from LTA
+is competitive but not superior. A camera-specific filter, calibrated by hand for each of the eight cameras,
+raises detection precision on 63 human-labeled LTA images from 0.816 to 0.833.
+A stacked ensemble of the detector's vehicle count, background differencing and
+zero-shot CLIP then rates every LTA frame as free-flowing, moderate or
+congested, agreeing with 74.3\% of 400 held-out human labels. The prototype does not close the loop from LTA
 images to local forecasting; doing so requires calibrated, time-aligned traffic
 series at the camera locations.

@@ -79,6 +79,13 @@ results/congestion/labeling/*
 !results/congestion/congestion_levels.csv
 !results/congestion/report/
 
+# Camera filter: the removed boxes and per-camera summary read by the demo's overlay.
+# detections_filtered.csv (about 32 MB) stays local; `python -m src.camera_filter.apply` rebuilds it.
+!results/camera_filter/
+results/camera_filter/*
+!results/camera_filter/removed.csv
+!results/camera_filter/apply_summary.csv
+
 notes/
 
 # ultralytics 的默认产物目录
