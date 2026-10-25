@@ -22,7 +22,7 @@ Two modules on top of the joint detector (`m736_joint_v4`), plus optional layers
 - Existing files touched: `server.py` (two fields, one route), `index.html` (one card, one slot), `console.js`, `console.css`, `i18n.js` (English and Chinese UI strings).
 
 ### Committed results
-`.gitignore` gets exceptions for `results/congestion/`: the human labels (`labeling/tasks.json`, `labeling/congestion_labels.json`), the frozen `ensemble_config.json`, the one-off test evaluation (`eval_test.json`, `eval_test_by_group.csv`) the per-frame levels `congestion_levels.csv` (1.4 MB) that the demo's heatmap reads, and the `report/` figures and summary table (1.4 MB). Voter scores and CLIP trials stay local.
+`.gitignore` gets exceptions for `results/congestion/`: the human labels (`labeling/tasks.json`, `labeling/congestion_labels.json`), the frozen `ensemble_config.json`, the one-off test evaluation (`eval_test.json`, `eval_test_by_group.csv`), the per-frame levels `congestion_levels.csv` (1.4 MB) that the demo's heatmap reads, and the `report/` figures and summary table (1.4 MB). For the camera filter, `results/camera_filter/removed.csv` and `apply_summary.csv` are committed so the demo's overlay works after a pull; `detections_filtered.csv` (about 32 MB) stays local. Voter scores and CLIP trials stay local.
 
 ### Run
 See `src/camera_filter/README.md` and `src/congestion/README.md`. `clip_voter.py` needs `open_clip_torch`. After `python -m src.camera_filter.apply` and `python -m src.congestion.ensemble_eval apply`, start the demo with `python -m src.demo.web.server` and open the camera monitoring page.
