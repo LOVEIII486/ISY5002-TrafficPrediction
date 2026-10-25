@@ -1,50 +1,71 @@
-% Human-labeled LTA evaluation.
-%
-% This file is not included in main.tex yet. To enable it:
-%   1. Freeze the human-labeled LTA test set and run the same evaluator used
-%      for the teacher-reference results.
-%   2. Replace the placeholders below with the new sample size, metrics and
-%      interpretation.
-%   3. Add \input{chapters/05-human-lta} at HUMAN-LTA-SLOT in
-%      chapters/05-results-and-analysis.tex.
-%
-% Inserting this file after Section 5.10 makes it Section 5.11. Existing results
-% tables and figures keep their numbers; only later appendix numbering may move.
+% Human-labeled LTA evaluation (Section 5.11).
+% Source: results/detection/finetune/eval/lta_human_v1/val/ (comparison.csv,
+% bootstrap.json, precision_recall_agnostic.csv); frozen set datasets/lta_human_v1.
 
 \subsection{Human-Labeled LTA Evaluation}\label{sec:results-human-lta}
 
 The LTA results in Section~\ref{sec:results-lta} use the frozen YOLO26x teacher
-as reference. The human-labeled test set provides an independent accuracy
-measurement, with the same four-class evaluator and the same confidence
-threshold. It contains [N] images from [cameras and period].
+as reference. The human-labeled set described in Section~\ref{sec:setup-data}
+provides an independent accuracy measurement with the same four-class evaluator
+at the 1280-pixel batch-inference resolution. It contains 63 week-2 images from
+the eight cameras (36 day, 27 night) with 1,197 vehicle boxes: 611 cars,
+459 motorcycles, 97 trucks and 30 buses. The annotator started from the teacher
+boxes, retained 96\% of them and added 566, of which 385 were drawn by hand,
+mostly distant motorcycles. The set was frozen with image-list and label
+digests before any model was scored on it.
 
-Table~\ref{tab:lta-human} reports the three models on this set.
+Table~\ref{tab:lta-human} reports the three students and the teacher on this
+set.
 
 \begin{table}[htbp]
   \centering
   \small
-  \caption{Human-labeled LTA test set ([N] images). mAP@0.5 includes 95\%
-  bootstrap intervals.}
+  \caption{Human-labeled LTA test set (63 images, 1,197 boxes, input 1280).
+  mAP@0.5 includes 95\% intervals from 2,000 image-level bootstrap resamples;
+  other columns are point estimates.}
   \label{tab:lta-human}
+  \setlength{\tabcolsep}{3pt}
   \begin{tabular}{@{}lccccccc@{}}
     \toprule
     Model & mAP@0.5 & mAP@.5--.95 & Car & Moto. & Bus & Truck & Count MAE \\
     \midrule
-    Pretrained YOLO26m & -- & -- & -- & -- & -- & -- & -- \\
-    MIO-TCD only       & -- & -- & -- & -- & -- & -- & -- \\
-    Joint fine-tuning  & -- & -- & -- & -- & -- & -- & -- \\
+    Pretrained YOLO26m & 0.467 (0.420--0.520) & \textbf{0.376} & 0.753 & 0.197 & \textbf{0.483} & 0.434 & 10.46 \\
+    MIO-TCD only       & 0.198 (0.152--0.260) & 0.132 & 0.439 & 0.087 & 0.151 & 0.116 & 14.37 \\
+    \rowcolor{oursrow}
+    Joint fine-tuning  & \textbf{0.478} (0.425--0.538) & 0.354 & \textbf{0.767} & \textbf{0.300} & 0.366 & \textbf{0.480} & \textbf{6.92} \\
+    \midrule
+    \textit{Teacher YOLO26x} & \textit{0.572} (0.509--0.637) & \textit{0.486} & \textit{0.808} & \textit{0.298} & \textit{0.530} & \textit{0.653} & \textit{8.46} \\
     \bottomrule
   \end{tabular}
+  \par\smallskip
+  \begin{minipage}{\linewidth}\footnotesize
+    \textit{Note.} Bold marks the best student in each column; the shaded row
+    is the joint model. The teacher row is a reference and is favoured by
+    construction, because the labels were made by correcting its boxes; at its
+    1920-pixel labeling resolution it reaches 0.670 mAP@0.5. Count MAE is in
+    vehicles per image at confidence 0.25.
+  \end{minipage}
 \end{table}
 
-[Replace this paragraph with the quantitative comparison, confidence intervals
-and the effect of replacing the teacher reference. If the conclusion differs
-from Section~\ref{sec:results-lta}, state the difference explicitly.]
+On human labels the joint model reaches 0.478 mAP@0.5, against 0.467 for the
+pretrained detector. The paired difference of 0.011 (95\% CI −0.043 to
+0.060) does not establish an improvement; the two models are also close in the
+teacher-reference comparison at 1280 pixels (Table~\ref{tab:lta}). Absolute
+scores are lower than against the teacher (0.478 versus 0.638 for the joint
+model), because the human labels add many small vehicles that the teacher
+missed. The joint model's advantage is coverage rather than overall precision.
+With the class-agnostic matching of Table~\ref{tab:filter}, its recall is 0.547
+against 0.394 for the pretrained detector, at a precision of 0.816 against
+0.872. Its counting error falls from 10.46 to 6.92 vehicles per image, and its
+motorcycle AP rises from 0.197 to 0.300. The pretrained detector remains better
+on buses and on mAP@0.5:0.95. MIO-only training stays far behind at 0.198,
+confirming the domain gap seen in Section~\ref{sec:results-lta}. All detectors
+miss many vehicles: the joint model's class-agnostic recall is 0.622 by day and
+0.391 at night, and most misses are distant motorcycles.
 
-% Optional figure slot:
-% \begin{figure}[htbp]
-%   \centering
-%   \includegraphics[width=\linewidth]{human_lta_examples.png}
-%   \caption{Detection examples on the human-labeled LTA test set.}
-%   \label{fig:human-lta-examples}
-% \end{figure}
+Three properties of the set limit these figures. The teacher pre-labels favour
+the teacher and the students distilled from it. The 17 removed images are the
+densest and darkest frames, mostly from the causeway camera 2702 and at night,
+so the scores likely overstate performance in those conditions. The set has a
+single annotator, and the image-level intervals ignore correlation within the
+eight cameras, so they are optimistic.

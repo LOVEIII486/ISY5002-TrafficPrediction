@@ -15,9 +15,9 @@ modules on a calibrated local series.
 \subsection{Vehicle Recognition Module}\label{sec:method-detection}
 
 The detection module is trained on MIO-TCD and jointly fine-tuned on LTA camera
-images. The target-domain set is drawn from week~1: 240 images are used for
-training and 80 week-2 images for validation, stratified by camera and by
-Singapore-time day/night. A larger COCO-pretrained detector, YOLO26x, generates pseudo-labels
+images. The target-domain set has 320 images: 240 from week~1 for training and
+80 from week~2 for validation, stratified by camera and by Singapore-time
+day/night. A larger COCO-pretrained detector, YOLO26x, generates pseudo-labels
 for all 320 images at the original 1920-pixel resolution with a confidence
 threshold of 0.3.
 

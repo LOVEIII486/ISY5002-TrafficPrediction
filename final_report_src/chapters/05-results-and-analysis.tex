@@ -111,8 +111,9 @@ model is the compromise between the two domains.
   1280, confidence 0.25). The pretrained detector finds 27 vehicles,
   MIO-TCD-only training 41, and joint fine-tuning 135. Box colors denote vehicle
   classes. The counts are model detections and illustrate detection density on
-  one frame; they are not an accuracy measure. Table~\ref{tab:det-test} reports
-  the quantitative comparison. On MIO-TCD the ranking reverses.}
+  one frame; they are not an accuracy measure. Tables~\ref{tab:lta}
+  and~\ref{tab:lta-human} report the quantitative comparison on LTA; on MIO-TCD
+  the ranking reverses (Table~\ref{tab:det-test}).}
   \label{fig:model-comparison}
 \end{figure}
 
@@ -450,9 +451,4 @@ also evaluated; the multi-target variant, which is the only setting that
 exercises multiple heads, did not improve flow over the single-target
 configuration, so the benchmark uses one target head.
 
-% HUMAN-LTA-SLOT:
-% When the human-labeled LTA test set is frozen and evaluated, insert
-%     \input{chapters/05-human-lta}
-% here. The template is a separate Section 5.11; existing results tables,
-% figures and section numbers stay unchanged. Keep the teacher-reference results in 5.2 as
-% a separate proxy unless the new labels are intended to replace them.
+\input{chapters/05-human-lta}
