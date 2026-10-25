@@ -54,8 +54,9 @@ which a calibrated local series would connect them.
 The project pursues three questions:
 
 \begin{itemize}
-  \item How well does a detector trained on MIO-TCD transfer to LTA images when
-        the target-domain reference is teacher-generated?
+  \item How well does a detector trained on MIO-TCD transfer to LTA images,
+        measured against teacher labels and against a human-labeled LTA test
+        set?
   \item How do representative forecasting models compare on PEMSD8 under a
         common protocol, and how does the custom model perform against them?
   \item How can a workbench present both outputs while keeping their data sources
@@ -74,7 +75,9 @@ small vehicle scale make annotation difficult even for humans.
 
 \begin{itemize}
   \item An LTA image set of 15,316 frames from eight Singapore cameras over two
-        weeks, with a documented sampling and teacher pseudo-labeling pipeline.
+        weeks, with a documented sampling and teacher pseudo-labeling pipeline,
+        and a human-labeled test set of 63 week-2 images (1,197 boxes) frozen
+        before evaluation.
   \item A leakage-aware MIO-TCD evaluation protocol based on scene groups, and
         a joint fine-tuning procedure that trains a COCO-pretrained YOLO26m on
         MIO-TCD and LTA images with teacher pseudo-labels; the model is applied

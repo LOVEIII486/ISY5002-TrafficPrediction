@@ -22,7 +22,7 @@ Figure~\ref{fig:detection-classes} gives the per-class breakdown.
     \toprule
     Model & mAP@0.5 & mAP@.5--.95 & Car & Moto. & Bus & Truck & Count MAE \\
     \midrule
-    Pretrained YOLO26m & 0.429 (0.337--0.516) & 0.320 & 0.655 & 0.136 & 0.673 & 0.253 & 1.215 \\
+    Pretrained YOLO26m & 0.430 (0.337--0.516) & 0.320 & 0.656 & 0.136 & 0.674 & 0.253 & 1.212 \\
     MIO-TCD only       & 0.709 (0.626--0.817) & 0.561 & \textbf{0.883} & 0.570 & \textbf{0.920} & \textbf{0.463} & \textbf{0.650} \\
     \rowcolor{oursrow}
     Joint fine-tuning  & \textbf{0.720} (0.645--0.825) & \textbf{0.563} & 0.874 & \textbf{0.646} & 0.908 & 0.453 & 0.698 \\
@@ -71,11 +71,11 @@ same inference resolutions after its labels were generated at 1920 pixels; it is
 a reference point, not a mathematical upper bound on student performance.
 Nighttime frames are the least reliable part of this proxy: low light and small
 vehicle scale make both detection and manual annotation difficult. The
-comparison is therefore a cross-domain proxy; accuracy across Singapore
-traffic-camera conditions requires a human-labeled test set.
+comparison is therefore a cross-domain proxy;
+Section~\ref{sec:results-human-lta} reports accuracy against human labels.
 Figure~\ref{fig:model-comparison} gives a visual comparison on one frame. On
 MIO-TCD the ranking reverses: MIO-only training reaches 0.709 mAP@0.5, compared
-with 0.429 for the pretrained detector (Table~\ref{tab:det-test}). The joint
+with 0.430 for the pretrained detector (Table~\ref{tab:det-test}). The joint
 model is the compromise between the two domains.
 
 \begin{table}[htbp]

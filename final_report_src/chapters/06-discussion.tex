@@ -8,9 +8,13 @@ gain is stable across scene groups. On the LTA images the reference is the
 YOLO26x teacher, and the joint model reaches 0.638 at the batch-inference
 resolution, close to the pretrained model's 0.660 and well above MIO-only
 training at 0.201. Joint training improves agreement on the Singapore validation
-set while retaining the accuracy gained from MIO-TCD. The human-labeled MIO-TCD
-test set provides the accuracy benchmark, and the LTA figures measure
-cross-domain agreement with the teacher.
+set while retaining the accuracy gained from MIO-TCD. Against human labels on
+63 LTA images, the joint model matches the pretrained detector in mAP@0.5 (0.478
+versus 0.467; the difference is not significant) but finds more vehicles: recall
+rises from 0.394 to 0.547 and counting error falls from 10.46 to 6.92 vehicles
+per image. Its practical benefit on the Singapore cameras is therefore better
+counting rather than higher overall accuracy, and recall, especially for distant
+motorcycles and at night, remains the main limitation.
 
 \subsection{Camera Filter and Congestion Levels}\label{sec:discussion-congestion}
 
@@ -84,10 +88,12 @@ LTA-to-Singapore system would require calibrated sensing and longer data
 collection.
 
 \begin{itemize}
-  \item LTA results use the YOLO26x pseudo-labels as reference, so they measure
-        agreement with the teacher, and the student inherits the teacher's
-        missed motorcycles and false positives. Human-labeled MIO-TCD provides
-        the accuracy benchmark.
+  \item LTA teacher-agreement results use the YOLO26x pseudo-labels as
+        reference, so the student inherits the teacher's missed motorcycles and
+        false positives. The human-labeled LTA test set is small (63 images from
+        eight cameras), was pre-labeled by the teacher and excludes 17 of the
+        densest and darkest frames, so it favours the teacher and likely
+        overstates performance in those conditions.
   \item Nighttime LTA frames are difficult to annotate even for humans:
         vehicles are small, poorly lit and often blurred. Teacher labels and
         human labels collected at night are the least reliable reference.
@@ -96,7 +102,7 @@ collection.
   \item Scene groups provide a content-based proxy for camera identity, so the
         MIO-TCD test set can retain residual same-camera overlap. In an audit of
         40 test images, each paired with its most similar training image, a
-        preliminary visual review found 9 same-camera pairs. The test score
+        manual visual review found 9 same-camera pairs. The test score
         therefore describes a mix of seen and unseen cameras, not generalization
         to new cameras.
   \item MIO-TCD is evaluated on a filtered four-class subset with a
@@ -104,8 +110,8 @@ collection.
   \item The workbench risk ranking is a threshold-based indicator defined on
         predicted speed. It supports comparative inspection but has not been
         validated against an independent congestion label.
-  \item The camera filter and congestion evaluations rely on a single
-        annotator. The congestion test set has 50 frames per camera, and two
+  \item The human-labeled detection, camera filter and congestion evaluations
+        rely on a single annotator. The congestion test set has 50 frames per camera, and two
         weeks give each weekday only two or three days, so per-camera and
         per-slot figures are uncertain.
   \item Congestion is judged only inside the calibrated detection zones, not

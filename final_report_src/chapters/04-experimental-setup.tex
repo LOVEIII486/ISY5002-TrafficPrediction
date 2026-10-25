@@ -55,10 +55,11 @@ daily profile.
 
 COCO-pretrained weights provide model initialization. The datasets above supply
 all training and evaluation data. Detection accuracy is measured on the
-human-labeled MIO-TCD test set, and LTA results use teacher-generated labels.
+human-labeled MIO-TCD test set; on LTA, results are reported both against
+teacher-generated labels and against human labels.
 
-In addition, two human-labeled LTA sets evaluate the camera filter and the
-congestion module. For the filter, a team member corrected the boxes on the 80
+In addition, two human-labeled LTA sets are used. For detection accuracy and
+the camera filter, a team member corrected the boxes on the 80
 week-2 validation images; 17 images judged too difficult to label reliably were
 removed, leaving 63 images with 1,197 vehicle boxes. For congestion, 600 frames
 were labeled free-flowing, moderate or congested in a browser tool that outlines
