@@ -121,8 +121,8 @@ maximum background correlation 0.94, maximum masked-background correlation 0.927
 vehicles, hard shadows and lighting changes push frames of the same camera below the thresholds. `audit_split` sampled 40
 test images with seed 42 and paired each with its **single most similar** training image (recorded in
 `results/detection/finetune/audit/v4_test/audit.csv` with image IDs, timestamps and judgements). **Manual
-review:** 9 pairs same camera, 2 probably, 4 undecidable (night test image vs. day
-training image), 25 different cameras. Of the 9, two pairs are under 10 minutes apart (2 min 18 s and 8 min 27 s) and one
+review:** 9 pairs same camera, 31 different cameras (judged pair by pair by Su Tanjia from
+fixed features such as crossings, lane markings and vegetation). Of the 9, two pairs are under 10 minutes apart (2 min 18 s and 8 min 27 s) and one
 is about 10 minutes apart (10 min 03 s).
 
 This is an observation from one audit, not the true overlap rate: only the single nearest training image was retrieved,
