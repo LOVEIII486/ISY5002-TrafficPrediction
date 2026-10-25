@@ -1,38 +1,13 @@
-# 识别部分组员任务总览
+# 识别部分组员任务
 
-> **2026-10-25 更新：任务 B、C 已取消。** 任务 A 已完成，人工测试集冻结为 `datasets/lta_human_v1`（63 张）。课程的「集成方法」要求由拥堵分级的堆叠集成（`src/congestion/`）覆盖。
-
-三个任务由同一位组员完成，**按 A → B → C 的顺序做**。B、C 的调参和最终评估都要用 A 产出的新加坡人工测试集。
-
-| 任务 | 内容 | 说明文件 | 用时 |
+| 任务 | 内容 | 说明文件 | 状态 |
 |---|---|---|---|
-| A | 80 张新加坡图人工修正标注 | [A_lta_annotation.md](A_lta_annotation.md) | 2–3 小时 |
-| B | 切片推理（SAHI），找回远处小车与摩托车 | [B_sliced_inference.md](B_sliced_inference.md) | 1–2 天 |
-| C | 多模型 WBF 集成，覆盖课程「集成方法」要求 | [C_ensemble.md](C_ensemble.md) | 1–2 天 |
+| A | 80 张新加坡图人工修正标注 | [A_lta_annotation.md](A_lta_annotation.md) | 已完成：Fu Junchun 标注 63 张（17 张过难未标），冻结为 `datasets/lta_human_v1` |
 
-## 你会拿到
+## 材料
 
 - `lta_annotation_package.zip`：任务 A 全部材料，不需要项目代码；
-- 仓库 `develop` 分支：任务 B、C 的代码基础；
-- `detection_results_and_weights.zip`：两个微调模型的权重；
-- `detection_eval_data.zip`：MIO-TCD 冻结评估集与新加坡 320 张图，解压后把 `datasets/` 放到仓库根目录。
+- 标注规范：[../LTA_ANNOTATION_GUIDE.md](../LTA_ANNOTATION_GUIDE.md)；
+- 收回与冻结：`python -m src.detection.annotate collect <导出 JSON> --annotator "<姓名>"`。
 
-## 建议日程（截止 10-31，报告需要留出时间）
-
-| 日期 | 做什么 |
-|---|---|
-| 10-21 – 10-22 | A：80 张全部标完，导出 JSON 发给负责人。空闲时装好仓库环境，跑通 B、C 的整图基线 |
-| 10-22 | 负责人生成冻结测试集 `datasets/lta_human_v1/` 发回给你 |
-| 10-23 – 10-25 | B：切片推理，调参、最终评估、对比图、结果描述 |
-| 10-26 – 10-28 | C：集成，调参、最终评估、对比图、结果描述 |
-| 10-28 前 | B、C 的结果表、图和英文段落交给负责人，汇入报告 |
-
-## 顺序上的注意事项
-
-- **A 必须完整标完、交付并冻结之后，才开始在新加坡数据上调 B、C。** 同一个人既标答案又调方法，
-  标注时不能受「哪种方法会更好」的影响。冻结后的测试集带指纹，之后不能再改。
-- **batch B（order 41–80）一定要标完。** B、C 用它调参，用 batch A（order 1–40）做最终评估。只标 batch A 的话，B、C 在新加坡上就没法调参。
-- B 和 C 都要把联合模型的整图推理当基线，结果可以共用：B 做完的单模型缓存，C 直接拿来用。
-- 代码在 `feature/sahi`、`feature/ensemble` 分支上提交，通过 PR 合并到 `develop`。
-
-图片含车牌，只在组内使用。遇到问题先看 `src/detection/README.md`，再找负责人。
+图片含车牌，只在组内使用。
