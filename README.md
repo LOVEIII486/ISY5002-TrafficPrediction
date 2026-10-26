@@ -86,7 +86,7 @@ python -m src.detection.run_detect \
 
 When using a fine-tuned detector, map its class names to `car`, `motorcycle`,
 `bus` and `truck` in `src/detection/classes.yaml`. See
-[`src/detection/README.en.md`](src/detection/README.en.md) for the input contract and
+[`src/detection/README.md`](src/detection/README.md) for the input contract and
 evaluation commands.
 
 ### Camera filter and congestion analysis
@@ -162,7 +162,7 @@ Hugging Face dataset:
 
 | Document | Contents |
 |---|---|
-| [`src/detection/README.en.md`](src/detection/README.en.md) | Detection pipeline and evaluation contract |
+| [`src/detection/README.md`](src/detection/README.md) | Detection pipeline and evaluation contract |
 | [`src/camera_filter/README.md`](src/camera_filter/README.md) | Camera-filter calibration, usage and evaluation |
 | [`src/congestion/README.md`](src/congestion/README.md) | Congestion labeling, models and evaluation |
 | [`datasets/lta_human_v1/README.md`](datasets/lta_human_v1/README.md) | Human-corrected annotation package and Hugging Face details |

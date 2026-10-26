@@ -148,7 +148,7 @@ are in `src/detection/annotate.py` in the project repository.
 ## Intended use
 
 Vehicle detection and counting, traffic density estimation, diurnal pattern analysis,
-per-camera time-series modelling, and evaluation on the human-corrected 63-image subset.
+per-camera time-series modeling, and evaluation on the human-corrected 63-image subset.
 
 ## Limitations
 

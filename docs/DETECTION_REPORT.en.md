@@ -1,7 +1,7 @@
 # Vehicle Detection — report-ready text
 
 Paste-ready paragraphs for the final report (vehicle-detection part). Numbers come from
-`results/detection/finetune/eval/` and match `src/detection/README.en.md`. Figures are produced by
+`results/detection/finetune/eval/` and match `src/detection/README.md`. Figures are produced by
 `python -m src.detection.report_figures` into `results/detection/finetune/figures/v4/`.
 
 ---
@@ -129,7 +129,7 @@ articulated trucks, which differ greatly in appearance and size, and pickups are
 
 ## 7. Reproducibility
 
-All steps are scripted in `src/detection/` (see `README.en.md`): `miotcd.py` builds the frozen splits and records manifest
+All steps are scripted in `src/detection/` (see `README.md`): `miotcd.py` builds the frozen splits and records manifest
 and label hashes in `dataset.json`; `train.py` refuses to run on altered data and records weights and data hashes in
 `provenance.json`; `evaluate.py` and `bootstrap.py` produce the tables; `audit_split.py` reproduces the overlap audit;
 `report_figures.py` draws the figures.
