@@ -211,9 +211,10 @@ The camera filter and the congestion module use OpenCV, scikit-learn and
 OpenCLIP \parencite{cherti2023openclip}.
 Large prediction arrays and trained weights are not stored in version control;
 the benchmark commands regenerate the arrays consumed by the workbench. The
-human-corrected LTA annotations, manifests and COCO/YOLO exports are released in
-\texttt{datasets/lta\_human\_v1}; images are referenced by filename and SHA-256
-rather than redistributed. Detection accuracy is measured with COCO-style mAP
+human-corrected LTA annotations, manifests and COCO/YOLO exports are distributed
+under \texttt{annotations/lta\_human\_v1/} in the LTA image dataset; the image
+files remain at the dataset root and are referenced by filename and SHA-256
+rather than duplicated. Detection accuracy is measured with COCO-style mAP
 \parencite{lin2014coco}, and uncertainty is estimated with bootstrap resampling
 \parencite{efron1993bootstrap}.
 

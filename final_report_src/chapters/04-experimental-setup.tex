@@ -3,11 +3,13 @@
 \subsection{Datasets}\label{sec:setup-data}
 
 The LTA collection contains 15,316 images from eight Singapore cameras over two
-weeks, sampled at ten-minute intervals.\footnote{Collected from the LTA Traffic
-Images API (data.gov.sg):
-\url{https://data.gov.sg/datasets/d_6cdb6b405b25aaaacbaf7689bcc6fae0/view}.
-The collection is mirrored at
-\url{https://huggingface.co/datasets/LOVEIII486/isy5002-lta-traffic-images}.}
+weeks, sampled at ten-minute intervals
+\parencite{ltatrafficimages2026}.\footnote{The project image collection and the
+human-corrected annotation subset are distributed as the
+\href{https://huggingface.co/datasets/LOVEIII486/isy5002-lta-traffic-images}{LTA
+image dataset on Hugging Face}; annotations are under
+\texttt{annotations/lta\_human\_v1/}. The images remain under the Singapore Open
+Data Licence 1.0; the annotations are released under CC BY 4.0.}
 Week~1 and week~2 are disjoint in time.
 For detection fine-tuning, 240 week-1 images are used for training and 80
 week-2 images for validation, stratified by camera and by Singapore-time
