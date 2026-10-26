@@ -2,9 +2,9 @@
   "name": "lta_human_v1",
   "version": "1.0",
   "labels_are": "human-corrected from yolo26x pre-labels (teacher-assisted, not annotated from scratch)",
-  "annotator": "team member",
+  "annotator": "anonymous",
   "source_images": "LTA week2 validation frames; images are not redistributed in this package",
-  "image_source": "https://huggingface.co/datasets/LOVEIII486/isy5002-lta-traffic-images",
+  "image_source": "week2/<camera_id>/<image_name> in the LTA image dataset",
   "license": {
     "annotations": "CC-BY-4.0",
     "images": "Singapore Open Data Licence 1.0"
