@@ -28,6 +28,8 @@ import pandas as pd  # noqa: E402
 from src.demo import congestion, data, detection, filtering  # noqa: E402
 
 WEB_ROOT = Path(__file__).resolve().parent
+# 浏览器切换相机、刷新页面时可能主动断开连接；这不是服务端错误。
+_CLIENT_GONE = (BrokenPipeError, ConnectionResetError, ConnectionAbortedError)
 DEFAULT_PORT = 8600
 
 DEFAULT_LANG = "en"
@@ -512,6 +514,18 @@ ROUTES = {
 }
 
 
+class WorkbenchHTTPServer(ThreadingHTTPServer):
+    """HTTP server that treats client disconnects as normal, not as server errors."""
+
+    def handle_error(self, request, client_address) -> None:
+        error = sys.exc_info()[1]
+        if isinstance(error, _CLIENT_GONE):
+            return
+        if isinstance(error, OSError) and getattr(error, "winerror", None) in (10053, 10054):
+            return
+        super().handle_error(request, client_address)
+
+
 class ConsoleHandler(BaseHTTPRequestHandler):
     server_version = "TrafficWorkbench/1.0"
 
@@ -541,6 +555,10 @@ class ConsoleHandler(BaseHTTPRequestHandler):
         except SystemExit as error:
             # 服务端自己抛的 SystemExit 已经按 lang 生成过文字，原样端给前端。
             self._send_json(HTTPStatus.CONFLICT, {"error": str(error)})
+        except _CLIENT_GONE:
+            # 浏览器在图片/JSON 写完前切走（切相机、刷新、关闭页面）。
+            # 客户端已经不在了，不要再尝试返回 500；否则会打印二次 traceback。
+            self.close_connection = True
         except Exception as error:  # noqa: BLE001
             traceback.print_exc()
             self._send_json(
@@ -580,12 +598,16 @@ class ConsoleHandler(BaseHTTPRequestHandler):
     def _send_bytes(
         self, status: HTTPStatus, payload: bytes, content_type: str, cache: str = "no-store"
     ) -> None:
-        self.send_response(status)
-        self.send_header("content-type", content_type)
-        self.send_header("content-length", str(len(payload)))
-        self.send_header("cache-control", cache)
-        self.end_headers()
-        self.wfile.write(payload)
+        try:
+            self.send_response(status)
+            self.send_header("content-type", content_type)
+            self.send_header("content-length", str(len(payload)))
+            self.send_header("cache-control", cache)
+            self.end_headers()
+            self.wfile.write(payload)
+        except _CLIENT_GONE:
+            # 写响应时客户端已经断开（WinError 10053/10054）。静默收尾即可。
+            self.close_connection = True
 
     def log_message(self, fmt: str, *args: Any) -> None:
         return
@@ -612,7 +634,7 @@ def main() -> None:
     data.speed_risk(data.latest_sample(), 60)
     data.replay_range()
 
-    server = ThreadingHTTPServer((args.host, args.port), ConsoleHandler)
+    server = WorkbenchHTTPServer((args.host, args.port), ConsoleHandler)
     # flush：重定向到文件时 stdout 是块缓冲的，不刷新就看不到启动信息。
     print(f"工作台已启动 -> http://{args.host}:{args.port}", flush=True)
     print(f"已核对 {len(data.discover())} 个实验产物，展示值与报告记录一致", flush=True)
