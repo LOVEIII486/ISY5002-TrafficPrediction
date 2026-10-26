@@ -1,0 +1,51 @@
+{
+  "name": "lta_human_v1",
+  "version": "1.0",
+  "labels_are": "human-corrected from yolo26x pre-labels (teacher-assisted, not annotated from scratch)",
+  "annotator": "team member",
+  "source_images": "LTA week2 validation frames; images are not redistributed in this package",
+  "image_source": "https://huggingface.co/datasets/LOVEIII486/isy5002-lta-traffic-images",
+  "license": {
+    "annotations": "CC-BY-4.0",
+    "images": "Singapore Open Data Licence 1.0"
+  },
+  "classes": [
+    "car",
+    "motorcycle",
+    "bus",
+    "truck"
+  ],
+  "images": 63,
+  "boxes": {
+    "motorcycle": 459,
+    "car": 611,
+    "truck": 97,
+    "bus": 30
+  },
+  "images_per_batch": {
+    "B": 34,
+    "A": 29
+  },
+  "images_per_camera": {
+    "4712": 10,
+    "4703": 10,
+    "4799": 9,
+    "2704": 8,
+    "4713": 8,
+    "4798": 8,
+    "2701": 7,
+    "2702": 3
+  },
+  "images_per_period": {
+    "day": 36,
+    "night": 27
+  },
+  "excluded_images": 17,
+  "manifest_sha256_16": {
+    "val": "b8b559039db2d5bf"
+  },
+  "labels_sha256_16": {
+    "val": "168c07700548614e"
+  },
+  "export_file_sha256_16": "46fa516cad0e2da8"
+}

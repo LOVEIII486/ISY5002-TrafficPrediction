@@ -10,7 +10,7 @@ Paste-ready paragraphs for the final report (vehicle-detection part). Numbers co
 
 The detection module counts vehicles of four classes (car, motorcycle, bus, truck) in still images from Singapore
 Land Transport Authority (LTA) traffic cameras. We collected 15,316 images from 8 cameras over two weeks in September 2026
-at 10-minute intervals. These images carry no annotations, so they cannot support an accuracy measurement on their own.
+at 10-minute intervals. The base images carry no annotations; a 63-image human-corrected validation subset is released separately in `datasets/lta_human_v1/`.
 
 To obtain a ground-truth evaluation we used the MIO-TCD localization dataset (Luo et al., 2018): 110,000 labelled training
 images from about 8,000 traffic-surveillance cameras in Canada and the United States, at 720×480 or 342×228 pixels.
@@ -121,7 +121,7 @@ articulated trucks, which differ greatly in appearance and size, and pickups are
 - Results are on a filtered, stratified subset of MIO-TCD, not the official benchmark or the natural class distribution.
 - Scene grouping approximates camera identity; about a fifth of audited test images had a same-camera training image.
 - Each configuration was trained once; intervals exclude training randomness.
-- There is no human-labelled LTA test set, so detection accuracy on Singapore cameras is not measured; LTA numbers are
+- The available human-corrected LTA set is a 63-image validation subset, not an independent test set; detection accuracy on Singapore cameras is measured on that subset with the limitations described in the report. LTA numbers are
   agreement with a teacher model whose own errors (notably missed distant motorcycles) are inherited.
 - Motorcycle recall on LTA frames remains incomplete in peak-hour spot checks.
 - The joint model sees about 6 % more images per epoch than the MIO-TCD-only model, so the comparison is between practical

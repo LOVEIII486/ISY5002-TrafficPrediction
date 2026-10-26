@@ -23,6 +23,9 @@ yolo/
 # 目录要存在，但内容不入版本控制，只保留占位文件
 datasets/*
 !datasets/.gitkeep
+# Annotation-only companion release; images stay in the base LTA dataset.
+!datasets/lta_human_v1/
+!datasets/lta_human_v1/**
 
 # results/ 的产物默认不入版本控制，唯独放行 forecast 的实验记录 run.json：
 # 它记了每次运行的指标与生效配置，是别人横向对比时唯一能直接引用的材料（40 个共 60 KB）。

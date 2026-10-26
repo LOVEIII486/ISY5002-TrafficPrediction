@@ -79,9 +79,23 @@ python -m src.detection.evaluate --weights yolo/yolo26m.pt results/detection/fin
 - **Memory**: yolo26m at 1280 with batch 4 needs about 19 GB. On an Apple M4 Pro (24 GB unified memory) this swaps
   (45 s per step); at 960 it uses about 11 GB (1 s per step). On an RTX 5070 (12 GB) use batch 2–4 at 1280, or 960.
 
+**Human-corrected validation subset.** `datasets/lta_human_v1/` is an annotations-only
+package for the 63 week-2 validation images (1,197 boxes) corrected by hand. Images
+are not copied; the manifest joins labels to the public LTA image dataset by
+filename and SHA-256. Rebuild it with:
+
+```bash
+python -m src.detection.annotate collect <export.json> --annotator "<name>" \
+    --annotations-only --excluded <deleted-images.csv> --out datasets/lta_human_v1
+```
+
+The package includes COCO, YOLO and JSONL labels, `images.csv`, `excluded.csv` and
+a dataset card. See `datasets/lta_human_v1/README.md` for provenance, limitations
+and the Hugging Face upload command.
+
 ## Fine-tuning and evaluation on MIO-TCD (human-annotated ground truth)
 
-The LTA images have no human labels, so the experiment above cannot give an accuracy. Ground-truth numbers come from the
+The base LTA images have no labels, so the experiment above cannot give an accuracy. A 63-image human-corrected validation subset is released in `datasets/lta_human_v1/`; independent ground truth for the benchmark comes from the
 **MIO-TCD localization set** (8,000 traffic-surveillance cameras in Canada and the US, 110,000 labelled training images
 of 720×480 or 342×228 pixels, CC BY-NC-SA 4.0; cite Luo et al., IEEE TIP 2018).
 

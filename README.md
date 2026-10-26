@@ -10,9 +10,16 @@
 | `src/congestion/` | Congestion analysis: rates every frame as free-flowing / moderate / congested inside the calibrated detection zones by combining the detector count, background differencing and CLIP | `results/congestion/` |
 | `src/demo/` | 控制台，按「模块间只通过产物通信」的约定读上面两者的产物 | 无 |
 
-两个模块**不互相 import**，只通过 `results/` 下的文件通信。
+模块之间**不互相 import**，只通过 `results/` 下的文件通信；`src/camera_filter/` 和 `src/congestion/` 读取检测产物，不反向依赖。
 
 `src/camera_filter/` and `src/congestion/` build on the detection results: `src/congestion/` uses the camera filter, and the console also reads their results.
+
+`datasets/lta_human_v1/` is an annotations-only companion release: 63
+human-corrected LTA images with COCO, YOLO and JSONL labels, plus the image
+manifest needed to join the labels to the public LTA image dataset. Images are
+not copied into the repository; see
+[`datasets/lta_human_v1/README.md`](datasets/lta_human_v1/README.md) for
+provenance, limitations and the Hugging Face upload command.
 
 ---
 

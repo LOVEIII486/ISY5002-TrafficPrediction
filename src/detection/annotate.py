@@ -1,8 +1,10 @@
-"""LTA 验证图的人工修正：准备 Label Studio 任务、提供本地图片服务、把导出结果收回成冻结测试集。
+"""LTA 验证图的人工修正：准备 Label Studio 任务、提供本地图片服务、把导出结果收回成冻结的人工修正验证子集。
 
     python -m src.detection.annotate prepare      # 生成任务 JSON 与标注界面配置
     python -m src.detection.annotate serve        # 本机只读图片服务（Label Studio 从这里加载图片）
     python -m src.detection.annotate collect <Label Studio 导出的 JSON>   # 转回 YOLO，写 datasets/lta_human_v1/
+    python -m src.detection.annotate collect <export.json> --annotations-only --excluded <csv>
+        # 只写标签/清单，不复制图片；用于仓库和 Hugging Face
 
 起点是 week2 的 80 张验证图（从未参与训练）：
 - 预标注 = 教师 yolo26x 的伪标签（置信度 ≥ 0.3，即 prelabel.py 的产物），以四个类别出现；
@@ -12,8 +14,9 @@
 顺序：每个相机 10 张里先排 5 张（白天、夜间都有），前 40 张本身就是均衡的一半，时间不够标到第 40 张也能用。
 
 **偏差说明（报告要写）**：预标注来自教师，联合训练模型又是学教师的伪标签，标注者若只「微调现有框」，
-测试集会偏向教师的判断（框的范围、漏标的车）。标注时必须逐车检查、补全漏标，规范见 docs/LTA_ANNOTATION_GUIDE.md。
-结果写成「教师模型预标注 + 人工逐张修正」，不要写成「从零人工标注」。
+验证子集会偏向教师的判断（框的范围、漏标的车）。标注时必须逐车检查、补全漏标，规范见 docs/LTA_ANNOTATION_GUIDE.md。
+结果写成「教师模型预标注 + 人工逐张修正」，不要写成「从零人工标注」；
+报告里称它为 human-corrected validation subset，不要称为独立 test set。
 """
 from __future__ import annotations
 
@@ -151,7 +154,17 @@ def serve(args) -> None:
     server.serve_forever()
 
 
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1 << 20), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
 def collect(args) -> None:
+    from PIL import Image
+
     export = json.loads(Path(args.export).read_text(encoding="utf-8"))
     by_name, unresolved = {}, []
     for task in export:
@@ -175,43 +188,156 @@ def collect(args) -> None:
         raise SystemExit(f"{len(set(unresolved))} 张图里还有未处理的 candidate 框，例如 {sorted(set(unresolved))[:3]}；改成四类之一或删除后再导出")
     if not by_name:
         raise SystemExit("导出里没有任何已提交的标注")
-    if HUMAN.exists():
+
+    out = Path(args.out)
+    if out.exists():
         if not args.overwrite:
-            raise SystemExit(f"{HUMAN} 已存在（冻结测试集不覆盖）；确认要重建加 --overwrite")
-        shutil.rmtree(HUMAN)
-    (HUMAN / "images" / "val").mkdir(parents=True)
-    (HUMAN / "labels" / "val").mkdir(parents=True)
-    rows = []
-    for name, (data, boxes) in sorted(by_name.items()):
-        shutil.copy2(paths.LABELED / "images" / "val" / name, HUMAN / "images" / "val" / name)
-        lines = [f"{c} {cx:.6f} {cy:.6f} {w:.6f} {h:.6f}" for c, cx, cy, w, h in boxes]
-        (HUMAN / "labels" / "val" / name).with_suffix(".txt").write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
-        rows.append({"image": name, "split": "val", "camera_id": data["camera_id"], "period": data["period"], "batch": data["batch"], "n_boxes": len(boxes)})
-    split = pd.DataFrame(rows)
-    split.to_csv(HUMAN / "split.csv", index=False)
-    listing = "\n".join(str(HUMAN / "images" / "val" / r["image"]) for r in rows) + "\n"
-    (HUMAN / "val.txt").write_text(listing, encoding="utf-8")
-    digest = hashlib.sha256()
-    for label in sorted((HUMAN / "labels" / "val").glob("*.txt")):
-        digest.update(label.name.encode() + b"\0" + label.read_bytes())
+            raise SystemExit(f"{out} 已存在（冻结集不覆盖）；确认要重建加 --overwrite")
+        shutil.rmtree(out)
+    (out / "labels" / "val").mkdir(parents=True)
+    if args.annotations_only:
+        (out / "annotations").mkdir(parents=True)
+    else:
+        (out / "images" / "val").mkdir(parents=True)
+
+    rows: list[dict] = []
+    coco_images: list[dict] = []
+    coco_annotations: list[dict] = []
+    jsonl_rows: list[dict] = []
     counts = defaultdict(int)
-    for _data, boxes in by_name.values():
-        for c, *_ in boxes:
-            counts[VEHICLE_CLASSES[c]] += 1
+    annotation_id = 0
+    for image_id, (name, (data, boxes)) in enumerate(sorted(by_name.items()), start=1):
+        if args.annotations_only:
+            source = paths.LTA_DATA / "week2" / data["camera_id"] / name
+        else:
+            source = paths.LABELED / "images" / "val" / name
+        if not source.is_file():
+            raise SystemExit(f"找不到源图：{source}")
+        with Image.open(source) as image:
+            width, height = image.size
+        if args.annotations_only:
+            sha256 = _file_sha256(source)
+        else:
+            shutil.copy2(source, out / "images" / "val" / name)
+            sha256 = _file_sha256(source)
+
+        yolo_lines, jsonl_boxes = [], []
+        for cls, cx, cy, w, h in boxes:
+            yolo_lines.append(f"{cls} {cx:.6f} {cy:.6f} {w:.6f} {h:.6f}")
+            x1 = max(0.0, (cx - w / 2) * width)
+            y1 = max(0.0, (cy - h / 2) * height)
+            bw = min(width - x1, w * width)
+            bh = min(height - y1, h * height)
+            annotation_id += 1
+            coco_annotations.append({
+                "id": annotation_id,
+                "image_id": image_id,
+                "category_id": cls + 1,
+                "bbox": [round(x1, 2), round(y1, 2), round(bw, 2), round(bh, 2)],
+                "area": round(bw * bh, 2),
+                "iscrowd": 0,
+            })
+            jsonl_boxes.append({
+                "category": VEHICLE_CLASSES[cls],
+                "category_id": cls + 1,
+                "bbox_xywh": [round(x1, 2), round(y1, 2), round(bw, 2), round(bh, 2)],
+            })
+            counts[VEHICLE_CLASSES[cls]] += 1
+
+        label_path = (out / "labels" / "val" / name).with_suffix(".txt")
+        label_path.write_text("\n".join(yolo_lines) + ("\n" if yolo_lines else ""), encoding="utf-8")
+        image_path = (
+            f"week2/{data['camera_id']}/{name}"
+            if args.annotations_only
+            else str(out / "images" / "val" / name)
+        )
+        rows.append({
+            "image": name,
+            "image_path": image_path,
+            "split": "val",
+            "camera_id": data["camera_id"],
+            "period": data["period"],
+            "captured_at_utc": data["captured_at_utc"],
+            "batch": data["batch"],
+            "order": data["order"],
+            "width": width,
+            "height": height,
+            "sha256": sha256,
+            "n_boxes": len(boxes),
+        })
+        coco_images.append({"id": image_id, "file_name": image_path, "width": width, "height": height, "sha256": sha256})
+        jsonl_rows.append({
+            "image": name,
+            "image_path": image_path,
+            "camera_id": data["camera_id"],
+            "period": data["period"],
+            "captured_at_utc": data["captured_at_utc"],
+            "width": width,
+            "height": height,
+            "sha256": sha256,
+            "boxes": jsonl_boxes,
+        })
+
+    split = pd.DataFrame(rows)
+    split.to_csv(out / "split.csv", index=False)
+    split.to_csv(out / "images.csv", index=False)
+    (out / "val.txt").write_text("\n".join(r["image_path"] for r in rows) + "\n", encoding="utf-8")
+
+    if args.annotations_only:
+        coco = {
+            "info": {
+                "description": "LTA week-2 human-corrected vehicle boxes",
+                "version": "1.0",
+                "year": 2026,
+            },
+            "licenses": [
+                {"id": 1, "name": "Singapore Open Data Licence 1.0", "url": "https://data.gov.sg/open-data-licence"},
+                {"id": 2, "name": "CC BY 4.0 (annotations)", "url": "https://creativecommons.org/licenses/by/4.0/"},
+            ],
+            "images": coco_images,
+            "annotations": coco_annotations,
+            "categories": [
+                {"id": index + 1, "name": name, "supercategory": "vehicle"}
+                for index, name in enumerate(VEHICLE_CLASSES)
+            ],
+        }
+        (out / "annotations" / "instances.json").write_text(json.dumps(coco, ensure_ascii=False, indent=2), encoding="utf-8")
+        (out / "annotations" / "annotations.jsonl").write_text(
+            "\n".join(json.dumps(row, ensure_ascii=False) for row in jsonl_rows) + "\n", encoding="utf-8"
+        )
+
+    if args.excluded:
+        excluded = pd.read_csv(args.excluded, encoding="utf-8-sig")
+        excluded["reason"] = "too_dense_or_dark"
+        excluded.to_csv(out / "excluded.csv", index=False)
+
+    digest = hashlib.sha256()
+    for label in sorted((out / "labels" / "val").glob("*.txt")):
+        digest.update(label.name.encode() + b"\0" + label.read_bytes())
     report = {
+        "name": "lta_human_v1",
+        "version": "1.0",
         "labels_are": "human-corrected from yolo26x pre-labels (teacher-assisted, not annotated from scratch)",
         "annotator": args.annotator,
-        "source_images": "LTA week2 validation frames (never used for training)",
+        "source_images": "LTA week2 validation frames; images are not redistributed in this package",
+        "image_source": "https://huggingface.co/datasets/LOVEIII486/isy5002-lta-traffic-images",
+        "license": {
+            "annotations": "CC-BY-4.0",
+            "images": "Singapore Open Data Licence 1.0",
+        },
+        "classes": list(VEHICLE_CLASSES),
         "images": len(rows),
+        "boxes": dict(counts),
         "images_per_batch": split["batch"].value_counts().to_dict(),
         "images_per_camera": split["camera_id"].value_counts().to_dict(),
-        "boxes": dict(counts),
-        "manifest_sha256_16": {"val": hashlib.sha256(listing.encode()).hexdigest()[:16]},
+        "images_per_period": split["period"].value_counts().to_dict(),
+        "excluded_images": int(len(pd.read_csv(out / "excluded.csv"))) if (out / "excluded.csv").is_file() else 0,
+        "manifest_sha256_16": {"val": hashlib.sha256((out / "val.txt").read_bytes()).hexdigest()[:16]},
         "labels_sha256_16": {"val": digest.hexdigest()[:16]},
         "export_file_sha256_16": hashlib.sha256(Path(args.export).read_bytes()).hexdigest()[:16],
     }
-    (HUMAN / "dataset.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"收回 {len(rows)} 张、{sum(counts.values())} 个框 {dict(counts)} → {HUMAN}")
+    (out / "dataset.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"收回 {len(rows)} 张、{sum(counts.values())} 个框 {dict(counts)} → {out}")
 
 
 def main() -> None:
@@ -222,6 +348,9 @@ def main() -> None:
     p = sub.add_parser("collect")
     p.add_argument("export", help="Label Studio 导出的 JSON（Export → JSON）")
     p.add_argument("--annotator", required=True, help="标注人姓名，写进 dataset.json")
+    p.add_argument("--out", default=str(HUMAN), help="输出目录")
+    p.add_argument("--annotations-only", action="store_true", help="只写标注与清单，不复制图片（用于仓库/Hugging Face）")
+    p.add_argument("--excluded", help="删除的图片 CSV（可选）")
     p.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
     {"prepare": prepare, "serve": serve, "collect": collect}[args.command](args)
