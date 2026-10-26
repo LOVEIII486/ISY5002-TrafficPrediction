@@ -56,12 +56,14 @@ daily profile.
 COCO-pretrained weights provide model initialization. The datasets above supply
 all training and evaluation data. Detection accuracy is measured on the
 human-labeled MIO-TCD test set; on LTA, results are reported both against
-teacher-generated labels and against human labels.
+teacher-generated labels and against human-corrected labels.
 
-In addition, two human-labeled LTA sets are used. For detection accuracy and
-the camera filter, a team member corrected the boxes on the 80
-week-2 validation images; 17 images judged too difficult to label reliably were
-removed, leaving 63 images with 1,197 vehicle boxes. For congestion, 600 frames
+In addition, two human-annotated LTA sets are used. For detection accuracy and
+the camera filter, an annotator corrected the boxes on the 80 week-2 validation
+images; 17 images judged too difficult to label reliably were removed, leaving
+63 images with 1,197 vehicle boxes. The annotations were initialized from
+teacher pre-labels and are therefore human-corrected, not independent of the
+teacher. For congestion, 600 frames
 were labeled free-flowing, moderate or congested in a browser tool that outlines
 the detection zones and hides the timestamp. The frames were drawn at random per
 camera within five Singapore-time strata (weekday peak, weekday off-peak, weekend
@@ -108,9 +110,11 @@ counting error. Confidence intervals come from 2,000 bootstrap resamples of
 scene groups; paired differences reuse the same resamples. This interval covers
 scene sampling only, because each detector configuration was trained once.
 
-The camera filter is scored on the 63 human-labeled images by class-agnostic
+The camera filter is scored on the 63 human-corrected images by class-agnostic
 precision and recall at IoU~0.5 and confidence~0.25, before and after filtering,
-with 2,000 bootstrap resamples of images. Congestion levels are scored by
+with 2,000 bootstrap resamples of images. These intervals are image-level and do
+not account for correlation between frames from the same camera, so they are
+optimistic. Congestion levels are scored by
 accuracy and linearly weighted Cohen's kappa \parencite{cohen1968kappa}, which
 counts confusing free-flowing with congested as twice as severe as confusing
 adjacent levels, together with precision and recall for the congested level.
@@ -118,9 +122,11 @@ Features, cut points and the primary method are chosen by five-fold
 cross-validation repeated 20 times on the practice labels. The primary method is
 the candidate with the highest cross-validated kappa; within 0.005 of the best,
 the simpler candidate is preferred. The test labels are used once, after the
-configuration is frozen, with 2,000 bootstrap resamples of test frames. Because
-peak hours are over-sampled, accuracy is also reported with each test frame
-weighted by its camera and stratum's share of all frames.
+configuration is frozen, with 2,000 bootstrap resamples of test frames. These
+intervals are frame-level; the 50 frames from each camera are correlated, so the
+intervals are optimistic. Because peak hours are over-sampled, accuracy is also
+reported with each test frame weighted by its camera and stratum's share of all
+frames.
 
 Forecasting uses masked MAE, RMSE and MAPE, averaged over the 12 output steps,
 with 15/30/60-minute breakdowns at output steps 3, 6 and 12. MAE is measured in

@@ -8,9 +8,9 @@ gain is stable across scene groups. On the LTA images the reference is the
 YOLO26x teacher, and the joint model reaches 0.638 at the batch-inference
 resolution, close to the pretrained model's 0.660 and well above MIO-only
 training at 0.201. Joint training improves agreement on the Singapore validation
-set while retaining the accuracy gained from MIO-TCD. Against human labels on
-63 LTA images, the joint model matches the pretrained detector in mAP@0.5 (0.478
-versus 0.467; the difference is not significant) but finds more vehicles: recall
+set while retaining the accuracy gained from MIO-TCD. Against the human-corrected labels on
+the 63-image validation subset, the joint model matches the pretrained detector in mAP@0.5 (0.478
+versus 0.467; the difference does not establish an improvement) but finds more vehicles: recall
 rises from 0.394 to 0.547 and counting error falls from 10.46 to 6.92 vehicles
 per image. Its practical benefit on the Singapore cameras is therefore better
 counting rather than higher overall accuracy, and recall, especially for distant
@@ -20,7 +20,7 @@ motorcycles and at night, remains the main limitation.
 
 The camera filter shows that fixed scenes allow a simple, transparent correction
 of a learned detector: it removes 2.0\% of boxes and raises precision by 1.7
-points on unseen human-labeled images, without retraining. The gain is small
+points on the human-corrected validation images, without retraining. The gain is small
 because most errors on LTA frames are missed vehicles, which a filter cannot
 recover; recall, not precision, limits counting on these cameras.
 
@@ -90,7 +90,7 @@ collection.
 \begin{itemize}
   \item LTA teacher-agreement results use the YOLO26x pseudo-labels as
         reference, so the student inherits the teacher's missed motorcycles and
-        false positives. The human-labeled LTA test set is small (63 images from
+        false positives. The human-corrected LTA validation subset is small (63 images from
         eight cameras), was pre-labeled by the teacher and excludes 17 of the
         densest and darkest frames, so it favours the teacher and likely
         overstates performance in those conditions.
@@ -110,7 +110,7 @@ collection.
   \item The workbench risk ranking is a threshold-based indicator defined on
         predicted speed. It supports comparative inspection but has not been
         validated against an independent congestion label.
-  \item The human-labeled detection, camera filter and congestion evaluations
+  \item The human-corrected detection, camera filter and congestion evaluations
         rely on a single annotator. The congestion test set has 50 frames per camera, and two
         weeks give each weekday only two or three days, so per-camera and
         per-slot figures are uncertain.

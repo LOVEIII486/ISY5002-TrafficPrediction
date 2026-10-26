@@ -1,18 +1,24 @@
-% Human-labeled LTA evaluation (Section 5.11).
-% Source: results/detection/finetune/eval/lta_human_v1/val/ (comparison.csv,
-% bootstrap.json, precision_recall_agnostic.csv); frozen set datasets/lta_human_v1.
+% Human-corrected LTA evaluation (Section 5.3).
+% Labels and manifest: datasets/lta_human_v1/ (tracked). Evaluation artifacts:
+% results/detection/finetune/eval/lta_human_v1/val/ (local, not versioned).
 
-\subsection{Human-Labeled LTA Evaluation}\label{sec:results-human-lta}
+\subsection{Human-Corrected LTA Evaluation}\label{sec:results-human-lta}
 
 The LTA results in Section~\ref{sec:results-lta} use the frozen YOLO26x teacher
-as reference. The human-labeled set described in Section~\ref{sec:setup-data}
-provides an independent accuracy measurement with the same four-class evaluator
-at the 1280-pixel batch-inference resolution. It contains 63 week-2 images from
-the eight cameras (36 day, 27 night) with 1,197 vehicle boxes: 611 cars,
-459 motorcycles, 97 trucks and 30 buses. The annotator started from the teacher
-boxes, retained 96\% of them and added 566, of which 385 were drawn by hand,
-mostly distant motorcycles. The set was frozen with image-list and label
-digests before any model was scored on it.
+as reference. The human-corrected set described in Section~\ref{sec:setup-data}
+is a 63-image subset of the 80 week-2 validation images. It is not an
+independent test set: the same images were used for the teacher-reference
+comparisons and for the resolution comparison, and the annotations were
+initialized from teacher boxes. It therefore provides a human-corrected
+validation measurement, not an independent estimate of accuracy on unseen
+Singapore cameras.
+
+The subset contains 63 week-2 images from the eight cameras (36 day, 27 night)
+with 1,197 vehicle boxes: 611 cars, 459 motorcycles, 97 trucks and 30 buses. The
+annotator started from the teacher boxes, retained 96\% of them and added 566,
+of which 385 were drawn by hand, mostly distant motorcycles. The human-corrected labels
+were frozen with image-list and label digests before any model was scored against
+them.
 
 Table~\ref{tab:lta-human} reports the three students and the teacher on this
 set.
@@ -20,7 +26,7 @@ set.
 \begin{table}[htbp]
   \centering
   \small
-  \caption{Human-labeled LTA test set (63 images, 1,197 boxes, input 1280).
+  \caption{Human-corrected LTA validation subset (63 images, 1,197 boxes, input 1280).
   mAP@0.5 includes 95\% intervals from 2,000 image-level bootstrap resamples;
   other columns are point estimates.}
   \label{tab:lta-human}
@@ -41,18 +47,19 @@ set.
   \begin{minipage}{\linewidth}\footnotesize
     \textit{Note.} Bold marks the best student in each column; the shaded row
     is the joint model. The teacher row is a reference and is favoured by
-    construction, because the labels were made by correcting its boxes; at its
-    1920-pixel labeling resolution it reaches 0.670 mAP@0.5. Count MAE is in
-    vehicles per image at confidence 0.25.
+    construction, because the labels were made by correcting its boxes. The
+    table evaluates it at 1280 pixels (0.572 mAP@0.5); at its 1920-pixel
+    labeling resolution it reaches 0.670. Count MAE is in vehicles per image at
+    confidence 0.25.
   \end{minipage}
 \end{table}
 
-On human labels the joint model reaches 0.478 mAP@0.5, against 0.467 for the
+On the human-corrected labels the joint model reaches 0.478 mAP@0.5, against 0.467 for the
 pretrained detector. The paired difference of 0.011 (95\% CI −0.043 to
 0.060) does not establish an improvement; the two models are also close in the
 teacher-reference comparison at 1280 pixels (Table~\ref{tab:lta}). Absolute
 scores are lower than against the teacher (0.478 versus 0.638 for the joint
-model), because the human labels add many small vehicles that the teacher
+model), because the human-corrected labels add many small vehicles that the teacher
 missed. The joint model's advantage is coverage rather than overall precision.
 With the class-agnostic matching of Table~\ref{tab:filter}, its recall is 0.547
 against 0.394 for the pretrained detector, at a precision of 0.816 against

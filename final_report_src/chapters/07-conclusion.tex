@@ -9,15 +9,15 @@ keeping the boundary between those domains explicit.
 For vehicle recognition, fine-tuning improved mAP@0.5 from 0.430 to 0.720 on the
 human-labeled MIO-TCD test subset. Joint training with target-domain
 pseudo-labels also improved agreement with the teacher model on the LTA
-validation set relative to MIO-TCD-only training. On 63 human-labeled LTA
-images, the joint model matched the pretrained detector in mAP@0.5 (0.478 versus
+validation set relative to MIO-TCD-only training. On the 63-image human-corrected LTA
+validation subset, the joint model matched the pretrained detector in mAP@0.5 (0.478 versus
 0.467) while reducing counting error and raising recall. These findings show the
 value of traffic-specific adaptation on the benchmark, while adaptation to the
 Singapore viewpoint is only partly solved; nighttime frames remain the least
 reliable part of the evaluation.
 
 Two further components extend the recognition output. A per-camera filter, calibrated by
-hand, raised precision on 63 human-labeled LTA images from 0.816 to 0.833 at a
+hand, raised precision on the 63-image human-corrected LTA subset from 0.816 to 0.833 at a
 small cost in recall. A stacked ensemble of the detector count, background
 differencing and zero-shot CLIP rated all 15,316 frames as free-flowing,
 moderate or congested, agreeing with 74.3\% of 400 held-out human labels. The

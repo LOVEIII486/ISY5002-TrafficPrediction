@@ -72,7 +72,7 @@ a reference point, not a mathematical upper bound on student performance.
 Nighttime frames are the least reliable part of this proxy: low light and small
 vehicle scale make both detection and manual annotation difficult. The
 comparison is therefore a cross-domain proxy;
-Section~\ref{sec:results-human-lta} reports accuracy against human labels.
+Section~\ref{sec:results-human-lta} reports accuracy against human-corrected labels.
 Figure~\ref{fig:model-comparison} gives a visual comparison on one frame. On
 MIO-TCD the ranking reverses: MIO-only training reaches 0.709 mAP@0.5, compared
 with 0.430 for the pretrained detector (Table~\ref{tab:det-test}). The joint
@@ -117,6 +117,8 @@ model is the compromise between the two domains.
   \label{fig:model-comparison}
 \end{figure}
 
+\input{chapters/05-human-lta}
+
 \subsection{Batch Inference on the LTA Collection}\label{sec:results-deployment}
 
 The joint model was run over all 15,316 images at 1280 pixels with confidence
@@ -130,28 +132,27 @@ prove that vehicles were missed. The count is a detection count and may
 understate nighttime traffic; the workbench's monitoring view presents it
 alongside camera reliability indicators.
 
-\subsection{Camera Filter on Human-Labeled LTA Images}\label{sec:results-filter}
+\subsection{Camera Filter on Human-Corrected LTA Images}\label{sec:results-filter}
 
 Over the full collection the filter removes 5,536 of the 279,476 boxes (2.0\%):
 4,110 outside the road regions and 1,426 in exclusion entries. The share ranges
 from 0.04\% at camera 2701 to 4.7\% at camera 4799. Table~\ref{tab:filter}
-compares raw and filtered detections on the 63 human-labeled images. Precision
+compares raw and filtered detections on the 63 human-corrected images. Precision
 rises from 0.816 to 0.833 (+1.7 points, 95\% CI +1.0 to +2.9), and false
 positives fall from 148 to 130. Recall falls slightly, from 0.547 to 0.543
-($-0.4$ points, 95\% CI $-1.0$ to $-0.1$).
+(−0.4 points, 95\% CI −1.0 to −0.1).
 
 Of the 23 boxes removed on these images, 18 are false positives and 5 match a
-labeled vehicle. Two of the five are water-filled barriers at camera 4713 that
-carry truck labels, two are cars at camera 2702 below the edge of the road
-polygon, and one is a car at the kerb at camera 4713. The polygons were not
-changed after the test labels were seen. The filter does not improve counting:
+labeled vehicle; the latter are mainly water-filled barriers and cars near the
+edge of a road polygon. The polygons were not changed after the human-corrected
+labels were seen. The filter does not improve counting:
 the per-image count error rises from 6.92 to 7.00 vehicles, because the detector
 already misses about 45\% of labeled vehicles and the filter only removes boxes.
 
 \begin{table}[htbp]
   \centering
   \small
-  \caption{Camera filter on 63 human-labeled LTA images (1,197 vehicle boxes).
+  \caption{Camera filter on 63 human-corrected LTA images (1,197 vehicle boxes).
   Joint model at confidence 0.25, class-agnostic matching at IoU~0.5; intervals
   from 2,000 image-level bootstrap resamples.}
   \label{tab:filter}
@@ -159,12 +160,17 @@ already misses about 45\% of labeled vehicles and the filter only removes boxes.
     \toprule
      & Raw & Filtered & Change [95\% CI] \\
     \midrule
-    Precision                      & 0.816 & \textbf{0.833} & $+1.7$ pts [$+1.0$, $+2.9$] \\
-    Recall                         & \textbf{0.547} & 0.543 & $-0.4$ pts [$-1.0$, $-0.1$] \\
-    False positives                & 148 & \textbf{130} & $-18$ \\
-    Count MAE (vehicles per image) & \textbf{6.92} & 7.00 & $+0.08$ \\
+    Precision                      & 0.816 & \textbf{0.833} & +1.7 pts [+1.0, +2.9] \\
+    Recall                         & \textbf{0.547} & 0.543 & −0.4 pts [−1.0, −0.1] \\
+    False positives                & 148 & \textbf{130} & −18 \\
+    Count MAE (vehicles per image) & \textbf{6.92} & 7.00 & +0.08 \\
     \bottomrule
   \end{tabular}
+  \par\smallskip
+  \begin{minipage}{\linewidth}\footnotesize
+    \textit{Note.} Intervals are image-level; frames from the same camera are
+    correlated, so these intervals are optimistic.
+  \end{minipage}
 \end{table}
 
 \subsection{Congestion Levels on the LTA Collection}\label{sec:results-congestion}
@@ -175,7 +181,7 @@ labels, stacking had the highest cross-validated kappa (0.780) and accuracy
 reaches 74.3\% accuracy (95\% CI 69.8--78.5\%) and weighted kappa 0.704,
 against 42.8\% for always predicting free-flowing. For the congested level,
 precision is 0.88 and recall 0.84. Stacking exceeds voter~A alone by 2.0 points,
-but the interval ($-1.8$ to $+5.5$) includes zero. Weighted to the full
+but the interval (−1.8 to +5.5) includes zero. Weighted to the full
 collection, accuracy is 75.8\%.
 
 Most errors are between adjacent levels: 69 of the 127 moderate frames were
@@ -185,23 +191,20 @@ which partly explains the drop from cross-validation. Accuracy per camera ranges
 from 60\% at camera 4799 to 94\% at camera 4712, on 50 frames each; it is 77\%
 at night and 73\% by day.
 
-Selecting on practice labels also settled two design choices. Masking everything
-outside the zones lowered voter~C's practice accuracy from 76.7\% to 59.6\%,
-because small zones shrink to a few pixels in CLIP's 224-pixel input, so the
-unmasked crop was kept. Weighting vehicles by passenger-car units did not beat
-the plain count (78.3\% vs 80.0\%).
+Practice-set selection also favored the unmasked CLIP crop (76.7\% versus
+59.6\%) and the plain vehicle count (80.0\% versus 78.3\%).
 
 \begin{table}[htbp]
   \centering
   \small
   \caption{Congestion levels: cross-validation on the 200 practice labels
   (5-fold, 20 repeats) and the single evaluation on the 400 test labels, with
-  95\% bootstrap intervals. $\kappa$ is linearly weighted; P/R are precision and
+  95\% bootstrap intervals. κ is linearly weighted; P/R are precision and
   recall for the congested level.}
   \label{tab:congestion}
   \begin{tabular}{@{}lcccc@{}}
     \toprule
-    Method & Practice acc. & Test acc. [95\% CI] & Test $\kappa$ & Congested P / R \\
+    Method & Practice acc. & Test acc. [95\% CI] & Test κ & Congested P / R \\
     \midrule
     Always free-flowing      & --     & 42.8\%             & 0.000 & -- \\
     A: detector count        & 80.0\% & 72.3\% [67.7, 76.5] & 0.671 & 0.86 / 0.78 \\
@@ -214,9 +217,10 @@ the plain count (78.3\% vs 80.0\%).
   \end{tabular}
   \par\smallskip
   \begin{minipage}{\linewidth}\footnotesize
-    \textit{Note.} Bold marks the highest accuracy and $\kappa$; the shaded row
-    is the primary method, frozen on the practice labels before the test labels
-    were used.
+    \textit{Note.} Bold marks the highest accuracy and κ; the shaded row is the
+    primary method, frozen on the practice labels before the test labels were
+    used. Intervals are frame-level and optimistic because the 50 frames from
+    each camera are correlated.
   \end{minipage}
 \end{table}
 
@@ -231,9 +235,9 @@ congested, and the two Sentosa Gateway cameras almost never (0.2\% and 0\%).
 Each weekday-hour cell rests on two or three days (about 11 frames), so one
 disrupted day can dominate a cell.
 
-\begin{figure}[htbp]
+\begin{figure}[t]
   \centering
-  \includegraphics[width=0.92\linewidth]{congestion_heatmaps.png}
+  \includegraphics[width=0.9\linewidth]{congestion_heatmaps.png}
   \caption{Share of frames rated congested by the primary method, by weekday and
   hour (Singapore time), 13--29 September 2026. Each panel is one camera; darker
   cells are congested more often.}
@@ -450,5 +454,3 @@ reduction cannot be attributed to architecture alone. Multi-target training was
 also evaluated; the multi-target variant, which is the only setting that
 exercises multiple heads, did not improve flow over the single-target
 configuration, so the benchmark uses one target head.
-
-\input{chapters/05-human-lta}

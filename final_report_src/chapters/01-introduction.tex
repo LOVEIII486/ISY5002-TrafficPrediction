@@ -44,23 +44,28 @@ different road networks.
 
 The project addresses this mismatch by building a prototype with three
 components: a vehicle recognition module, a traffic forecasting module and the
-Traffic Monitoring and Forecasting Workbench. The detection module is trained on
-MIO-TCD and jointly fine-tuned on LTA images with teacher pseudo-labels. The forecasting module is trained and
-evaluated on PEMSD8 under a common protocol that compares eight models. The
-workbench presents the outputs of both modules and labels their data sources. The
-design keeps the two data domains explicit and defines the interface through
-which a calibrated local series would connect them.
+Traffic Monitoring and Forecasting Workbench. The recognition component includes
+the detector, a per-camera false-positive filter and a scene-level congestion
+estimate; these are post-processing and analysis layers on the same LTA images,
+not a separate data domain. The detection module is trained on MIO-TCD and
+jointly fine-tuned on LTA images with teacher pseudo-labels. The forecasting
+module is trained and evaluated on PEMSD8 under a common protocol that compares
+eight models. The workbench presents the outputs of both modules and labels their
+data sources. The design keeps the two data domains explicit and defines the
+interface through which a calibrated local series would connect them.
 
-The project pursues three questions:
+The project pursues four questions:
 
 \begin{itemize}
   \item How well does a detector trained on MIO-TCD transfer to LTA images,
-        measured against teacher labels and against a human-labeled LTA test
-        set?
+        measured against teacher labels and against a human-corrected LTA
+        validation subset?
   \item How do representative forecasting models compare on PEMSD8 under a
         common protocol, and how does the custom model perform against them?
   \item How can a workbench present both outputs while keeping their data sources
         explicit?
+  \item How well do fixed-camera post-processing and visual congestion
+        estimates perform when evaluated against human labels?
 \end{itemize}
 
 The scope is limited to four vehicle classes in still images. Forecasting
@@ -76,8 +81,8 @@ small vehicle scale make annotation difficult even for humans.
 \begin{itemize}
   \item An LTA image set of 15,316 frames from eight Singapore cameras over two
         weeks, with a documented sampling and teacher pseudo-labeling pipeline,
-        and a human-labeled test set of 63 week-2 images (1,197 boxes) frozen
-        before evaluation.
+        and a human-corrected validation subset of 63 week-2 images (1,197
+        boxes) frozen before evaluation.
   \item A leakage-aware MIO-TCD evaluation protocol based on scene groups, and
         a joint fine-tuning procedure that trains a COCO-pretrained YOLO26m on
         MIO-TCD and LTA images with teacher pseudo-labels; the model is applied

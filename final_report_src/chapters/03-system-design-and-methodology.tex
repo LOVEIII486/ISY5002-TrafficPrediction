@@ -3,8 +3,9 @@
 \subsection{System Overview}\label{sec:method-architecture}
 
 Figure~\ref{fig:architecture} shows the prototype architecture. The upper path
-maps LTA camera images to a detection table; the lower path maps PEMSD8 time
-series to forecast metrics. Both outputs feed the Traffic Monitoring and
+maps LTA camera images to a detection table and to the recognition
+post-processing layers described in Section~\ref{sec:method-congestion}; the
+lower path maps PEMSD8 time series to forecast metrics. Both outputs feed the Traffic Monitoring and
 Forecasting Workbench, a web-based interface that presents an overview, a
 monitoring view and a forecast view. The two paths use separate data domains:
 LTA camera images for recognition and PEMSD8 road-network series for
@@ -34,8 +35,10 @@ four-class evaluator. The joint model is then run at 1280 pixels over all
   \centering
   \includegraphics[width=\linewidth]{architecture.png}
   \caption{Prototype architecture. The upper path processes LTA camera images
-  for vehicle recognition; the lower path processes PEMSD8 time series for
-  traffic forecasting. Both outputs feed the workbench.}
+  for vehicle recognition and its post-processing layers; the lower path
+  processes PEMSD8 time series for traffic forecasting. Both outputs feed the
+  workbench. The camera-filter and congestion layers are described in
+  Section~\ref{sec:method-congestion} and omitted here for clarity.}
   \label{fig:architecture}
 \end{figure}
 
@@ -53,12 +56,14 @@ box rule protects vehicles that queue beside a fixed false positive; it is used
 for a traffic light at camera 4703, where motorcycles wait next to it.
 
 Calibration uses a browser page that plots the bottom-centre points of two weeks
-of detections for each camera and proposes draft polygons from their density. A
-team member adjusts the vertices and accepts or rejects candidate false
-positives, which are boxes that recur at the same position. The 80 week-2
-validation images are excluded from calibration, so the human-labeled images in
-Section~\ref{sec:results-filter} are unseen. The filter can wrap the detector as
-a drop-in replacement or filter the existing detection table.
+of detections for each camera and proposes draft polygons from their density. An
+annotator adjusts the vertices and accepts or rejects candidate false positives,
+which are boxes that recur at the same position. The 80 week-2 validation images
+are excluded from calibration, so the human-corrected images in
+Section~\ref{sec:results-filter} were held out from calibration. Because the
+filter is calibrated per camera, this evaluates image-level correction, not
+transfer to new cameras. The filter can wrap the detector as a drop-in
+replacement or filter the existing detection table.
 
 The congestion module rates every LTA frame as free-flowing, moderate or
 congested, judging only the detection zones: near-field segments that cover the
@@ -69,8 +74,10 @@ box occupancy, the share of zone area covered by boxes. Voter~B is classical
 image processing: for each camera and hour of day, a per-pixel median over two
 weeks gives a background, and Canny edges \parencite{canny1986edge} present in
 the frame but not in the background count as foreground, ignoring over-exposed
-pixels. Voter~C applies a pretrained vision-language model without further
-training: OpenCLIP ViT-B/16 trained on LAION-2B
+pixels. The background uses all frames in the collection, including test frames,
+but no labels; it is an unsupervised, transductive step. Voter~C applies a
+pretrained vision-language model without further
+training: OpenCLIP ViT-B/16 trained on a LAION-2B subset of LAION-5B
 \parencite{radford2021clip,cherti2023openclip,schuhmann2022laion} compares a
 crop around the zones with three groups of text prompts, and its class
 probabilities give a congestion score.
@@ -203,14 +210,18 @@ static HTML, CSS and JavaScript (Tabler components).\footnote{\url{https://table
 The camera filter and the congestion module use OpenCV, scikit-learn and
 OpenCLIP \parencite{cherti2023openclip}.
 Large prediction arrays and trained weights are not stored in version control;
-the benchmark commands regenerate the arrays consumed by the workbench.
-Detection accuracy is measured with COCO-style mAP
+the benchmark commands regenerate the arrays consumed by the workbench. The
+human-corrected LTA annotations, manifests and COCO/YOLO exports are released in
+\texttt{datasets/lta\_human\_v1}; images are referenced by filename and SHA-256
+rather than redistributed. Detection accuracy is measured with COCO-style mAP
 \parencite{lin2014coco}, and uncertainty is estimated with bootstrap resampling
 \parencite{efron1993bootstrap}.
 
 \subsection{Integration Design}\label{sec:method-integration}
 
-The prototype is organized as three modules with a shared workbench. A fully
+The prototype is organized as three top-level modules with a shared workbench;
+the camera filter and congestion estimate are recognition post-processing layers,
+not additional data domains. A fully
 integrated deployment requires a calibrated, time-aligned traffic series at the
 camera locations. LTA images provide instantaneous vehicle counts; a forecasting
 model additionally needs a consistent series of flow, and ideally occupancy and

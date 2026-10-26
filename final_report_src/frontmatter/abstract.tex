@@ -1,26 +1,22 @@
 \section*{Abstract}
 
-Traffic monitoring systems observe road conditions, while short-term forecasting
-anticipates congestion. This project develops a modular prototype that treats
-the two tasks separately because the available data support different levels of
-measurement. A vehicle-recognition module fine-tunes a COCO-pretrained YOLO26m
-on MIO-TCD and on 320 Singapore LTA camera images with teacher pseudo-labels,
-and is evaluated on a leakage-aware MIO-TCD split, on LTA teacher agreement and
-on 63 human-labeled LTA images.
-A forecasting module compares eight models on PEMSD8 under native and unified
-nine-channel inputs, with five-seed paired checks for the leading four; the
-custom MultiHeadSTGCN is examined through a staged ablation. A web workbench
-presents camera monitoring, vehicle counts, forecast curves and a
-threshold-based risk ranking, while labeling the data source of each view. On
-MIO-TCD, fine-tuning raises mAP@0.5 from 0.430 to 0.720. On the human-labeled
-LTA images, joint fine-tuning lowers counting error and raises recall but does
-not significantly improve mAP@0.5 over the pretrained detector (0.478 versus
-0.467). On PEMSD8, GWNET
-achieves the lowest MAE among the evaluated configurations, and the custom model
-is competitive but not superior. A camera-specific filter, calibrated by hand for each of the eight cameras,
-raises detection precision on 63 human-labeled LTA images from 0.816 to 0.833.
-A stacked ensemble of the detector's vehicle count, background differencing and
-zero-shot CLIP then rates every LTA frame as free-flowing, moderate or
-congested, agreeing with 74.3\% of 400 held-out human labels. The prototype does not close the loop from LTA
-images to local forecasting; doing so requires calibrated, time-aligned traffic
-series at the camera locations.
+Traffic monitoring observes road conditions; short-term forecasting anticipates
+congestion. This project develops a modular prototype that evaluates the two
+tasks on their respective data domains. A vehicle-recognition module fine-tunes
+YOLO26m on MIO-TCD and 320 LTA images with teacher pseudo-labels, and is
+evaluated on a leakage-aware MIO-TCD split, on LTA teacher agreement, and on a
+63-image human-corrected subset of the week-2 validation frames. A per-camera
+filter removes fixed false positives, and a stacked ensemble of detector counts,
+background differencing and zero-shot CLIP assigns three congestion levels. A
+forecasting module compares eight models on PEMSD8 under native and unified
+nine-channel inputs, with five-seed checks for the leading four. A workbench
+presents both source-labeled outputs.
+
+On MIO-TCD, fine-tuning raises mAP@0.5 from 0.430 to 0.720. On the
+human-corrected LTA subset, joint training lowers counting error and raises
+recall but does not establish an mAP gain (0.478 versus 0.467). On PEMSD8, GWNET
+has the lowest MAE; MultiHeadSTGCN is competitive but not superior. The filter
+raises precision from 0.816 to 0.833 at a small recall cost; congestion
+estimates agree with 74.3\% of 400 held-out labels. The prototype does not close
+the loop from LTA images to local forecasting; calibrated time-aligned series
+are still required.
