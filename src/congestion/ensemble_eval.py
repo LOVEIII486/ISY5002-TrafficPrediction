@@ -79,8 +79,25 @@ def load_c(path: Path, crop: str) -> pd.DataFrame:
     return out
 
 
+def _load_clip_parts(directory: Path, run_info: Path) -> list[pd.DataFrame]:
+    parts = [load_c(p, p.stem.removeprefix("voter_clip_")) for p in sorted(directory.glob("voter_clip_*.csv"))]
+    # A single --crop run writes voter_clip.csv without a crop suffix. Read the
+    # crop name from clip_run.json so the default single-crop pipeline works too.
+    plain = directory / "voter_clip.csv"
+    if plain.is_file():
+        crop = "context"
+        if run_info.is_file():
+            crop = json.loads(run_info.read_text(encoding="utf-8")).get("crop_mode", crop)
+        parts.append(load_c(plain, crop))
+    return parts
+
+
 def load_trials(root: Path) -> pd.DataFrame | None:
-    parts = [load_c(p, p.stem.removeprefix("voter_clip_")) for p in sorted((root / "clip_trials").glob("voter_clip_*.csv"))]
+    # Prefer the labeled-frame trials in clip_trials/. Fall back to the root
+    # output of a default full clip_voter run, which is also what apply uses.
+    parts = _load_clip_parts(root / "clip_trials", root / "clip_trials" / "clip_run.json")
+    if not parts:
+        parts = _load_clip_parts(root, root / "clip_run.json")
     if not parts:
         return None
     out = parts[0]
@@ -306,6 +323,15 @@ def cmd_apply(root: Path) -> None:
         json.loads(run_info.read_text(encoding="utf-8")).get("crop_mode") == crop
     if c_ok:
         f = f.merge(load_c(root / "voter_clip.csv", crop), on="image", how="left")
+        if needs_c:
+            ccols = [c for c in f if c.startswith("C_")]
+            missing = int(f[ccols].isna().any(axis=1).sum()) if ccols else len(f)
+            if missing:
+                raise SystemExit(
+                    f"The CLIP file covers only {len(f) - missing} of {len(f)} frames. "
+                    "Run a full clip_voter pass before applying the primary method:\n"
+                    f"  python -m src.congestion.clip_voter --crop {crop}"
+                )
     elif needs_c:
         raise SystemExit(f"The primary method uses C with the '{crop}' crop. Score every frame first:\n"
                          f"  python -m src.congestion.clip_voter --crop {crop}")
