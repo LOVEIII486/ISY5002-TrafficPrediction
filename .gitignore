@@ -98,3 +98,11 @@ notes/
 
 # ultralytics 的默认产物目录
 runs/
+
+# Presentation build artifacts are local; the final deck is versioned.
+presentation/
+submission/~$*.pptx
+
+# Large media and the narrated deck are delivered separately; keep them out of git.
+submission/*.mp4
+submission/ISY5002_Final_Presentation_New.pptx
